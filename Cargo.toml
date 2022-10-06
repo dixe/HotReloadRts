@@ -1,0 +1,8 @@
+[workspace]
+members = [
+   "executable",
+   "shared",
+   "game",
+   "logic"
+
+]

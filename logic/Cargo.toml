@@ -1,0 +1,16 @@
+[package]
+name = "logic"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+shared = { path = "../shared" }
+game = { path = "../game" }
+nalgebra = "0.31.1"
+
+
+[lib]
+name = "logic"
+crate-type = ['rlib', 'dylib']

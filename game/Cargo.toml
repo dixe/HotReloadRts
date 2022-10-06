@@ -1,0 +1,17 @@
+[package]
+name = "game"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+shared = { path = "../shared" }
+libloading = "0.7"
+gl_lib = { path = "../../rust-gl-lib"}
+nalgebra = "0.31.1"
+failure = "0.1"
+
+[lib]
+name = "game"
+crate-type = ['rlib', 'dylib']

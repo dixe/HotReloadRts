@@ -1,11 +1,10 @@
 extern crate shared;
-use nalgebra::vector;
 use libloading;
 use crate::state::*;
-use gl_lib::{gl, na, objects::{plane, mesh, shadow_map, texture_quad, gltf_mesh}, shader::{self, Shader}, camera};
-use gl_lib::controller;
-use gl_lib::sdl2::{self, keyboard::Keycode};
+use gl_lib::{gl, na, objects::gltf_mesh, camera};
 use crate::render;
+use crate::handle_inputs;
+use crate::commands::*;
 
 // Store logic, which is lib and function points, seperate from the state. So we can reload logic. And call logic with &mut state
 pub struct Game {
@@ -21,25 +20,41 @@ pub struct Game {
     // CAMERA
     pub camera: camera::Camera,
     pub camera_controller: camera::free_camera::Controller,
+
+
+    pub play_state: PlayState,
+
+    // TMP BUFFERS
+    pub tmp_buffer: Vec::<usize>
+
 }
 
 
 impl shared::SharedState for Game {
     fn update_and_render(&mut self, gl: &gl::Gl, event_pump: &mut gl_lib::sdl2::EventPump) {
 
-        handle_inputs(self, event_pump);
+        handle_inputs::handle_inputs(self, event_pump);
 
         self.camera_controller.update_camera(&mut self.camera, self.state.dt);
 
         // run logic step
-        let view_mat = self.camera.projection() * self.camera.view();
-        (self.logic.step_fn)(&mut self.state, view_mat);
+        (self.logic.step_fn)(&mut self.state);
 
 
         // render
        render::render(gl, self);
     }
 }
+
+
+
+
+#[derive(Clone, Copy, Debug)]
+pub enum PlayState {
+    General, // select and right
+    ApplyCommand(Command)
+}
+
 
 #[derive(Copy, Clone, Debug)]
 pub struct ScreenPos {
@@ -82,7 +97,7 @@ impl SelectBox {
 pub fn load() -> Logic {
     let lib = shared::copy_and_load_lib("logic.dll");
 
-    let step_fn: libloading::Symbol<extern "Rust" fn(&mut State, na::Matrix4::<f32>)> =
+    let step_fn: libloading::Symbol<extern "Rust" fn(&mut State)> =
         unsafe {
            lib.get(b"step")
         }.expect("Load of step fn");
@@ -95,73 +110,6 @@ pub fn load() -> Logic {
 }
 
 
-pub fn handle_inputs(game: &mut Game, event_pump: &mut gl_lib::sdl2::EventPump) {
-    let kb_map = setup_keyboard_mapping();
-
-
-
-    for event in event_pump.poll_iter() {
-        game.camera_controller.update_events(event.clone());
-        controller::on_input(event.clone(), &kb_map, game);
-
-        use sdl2::event::Event::*;
-        match event.clone() {
-            MouseButtonDown{mouse_btn, x, y, ..} => {
-                if game.state.select_box.is_none() && mouse_btn == sdl2::mouse::MouseButton::Left{
-                    game.state.select_box = Some(SelectBox {
-                        start: ScreenPos { x,y },
-                        current: ScreenPos { x,y },
-                    });
-                }
-            },
-            MouseMotion{mousestate, x, y, .. } => {
-                if let Some(sb) = &mut game.state.select_box {
-                    sb.current.x = x;
-                    sb.current.y = y;
-                }
-            },
-            MouseButtonUp{mouse_btn, x, y, ..} => {
-
-                if let Some(sb) = &mut game.state.select_box {
-
-                    game.state.selected.clear();
-
-                    let transform = game.camera.projection() * game.camera.view();
-
-                    // does not really belong here, can be on game. State just need to have a vec of selected items
-
-                    let count = game.state.positions.len();
-                    for i in 0..count {
-                        let mut homo_pos = game.state.positions[i].to_homogeneous();
-
-                        homo_pos.w = 1.0;
-                        let mut sp = transform * homo_pos;
-                        sp = sp / sp.w;
-
-                        let mut xy = sp.xy();
-
-                        xy.x = (xy.x + 1.0) * 600.0;
-                        xy.y = 700.0 - ((xy.y + 1.0) * 350.0);
-
-                        let x = xy.x as i32;
-                        let y = xy.y as i32;
-
-
-                        if x >= sb.min_x() && x <= sb.max_x()
-                            && y >= sb.min_y() && y <= sb.max_y() {
-                                game.state.selected.push(i);
-                            }
-                    }
-
-                }
-
-                game.state.select_box = None;
-            },
-            _ => {}
-        }
-
-    }
-}
 
 
 
@@ -187,12 +135,15 @@ pub extern "Rust" fn initialize_state(gl: &gl::Gl) -> Box<dyn shared::SharedStat
         render_data: render::RenderData::new(gl),
         logic,
 
+        tmp_buffer: vec![],
+        play_state: PlayState::General,
+
     })
 }
 
 
 pub struct Logic {
-    step_fn: fn(&mut State, na::Matrix4::<f32>),
+    step_fn: fn(&mut State),
     _lib: libloading::Library
 }
 
@@ -200,24 +151,14 @@ pub struct Logic {
 
 
 
-fn setup_keyboard_mapping() -> controller::ControllerMapping<Game> {
-    let mut kb_map = controller::ControllerMapping::new();
 
-    use Keycode::*;
-    kb_map.exit(Keycode::Escape);
-    kb_map.add_on_press(R, reload_assets);
-    kb_map.add_on_press(Q, reset);
-
-    kb_map
-}
-
-fn reset(game: &mut Game) {
+pub fn reset(game: &mut Game) {
     game.state = init();
 }
 
 
 // Reloads all shaders, glb models and also logic.dll
-fn reload_assets(game: &mut Game) {
+pub fn reload_assets(game: &mut Game) {
 
     // maybe move this to a function in render
     let base_path: std::path::PathBuf = "E:/repos/HerdGame/assets".to_string().into();

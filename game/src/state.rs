@@ -1,6 +1,9 @@
 use nalgebra as na;
 use nalgebra::vector;
 use crate::game;
+use crate::commands::Command;
+use nohash_hasher::IntMap;
+
 
 pub type EntityId = usize;
 pub type V3 = na::Vector3::<f32>;
@@ -19,6 +22,10 @@ pub struct State {
     pub z_rotations: Vec::<f32>,
     pub steer: Vec::<Steer>,
 
+    pub move_targets: IntMap<EntityId, V3>,
+
+    pub select_pos: V3,
+
     pub light: V3,
     pub sep_w: f32,
     pub align_w: f32,
@@ -26,6 +33,7 @@ pub struct State {
     pub steer_force: f32,
     pub dt: f32,
 
+    pub command: Command,
 }
 
 #[derive(Debug, Clone, Copy, Default)]
@@ -50,8 +58,10 @@ impl State {
             steer_force: 5.0,
             dt: 1.0/60.0,
             select_box: None,
-            selected: vec![]
-
+            selected: vec![],
+            move_targets: Default::default(),
+            command: Command::Empty,
+            select_pos:Default::default(),
         }
     }
 

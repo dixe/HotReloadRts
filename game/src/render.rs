@@ -1,11 +1,6 @@
 extern crate shared;
-
 use nalgebra::vector;
-use libloading;
-use crate::state::*;
-use gl_lib::{gl, na, objects::{plane, mesh, shadow_map, texture_quad, square, gltf_mesh}, shader::{self, Shader}, camera};
-use gl_lib::controller;
-use gl_lib::sdl2::keyboard::Keycode;
+use gl_lib::{gl, na, objects::{plane, mesh, shadow_map, texture_quad, square, gltf_mesh}, shader::{self, Shader}};
 use crate::game::*;
 
 
@@ -90,10 +85,14 @@ pub fn render(gl: &gl::Gl, game: &Game) {
         model_mat = model_mat.append_translation(&game.state.positions[i]);
 
 
-        let mut color = na::Vector3::new(1.0, 0.0, 0.0);
+        let mut color = vector![0.0, 0.0, 0.0];
+
+        color.x = game.state.positions[i].x / 3.0;
+        color.y = game.state.positions[i].y / 5.0;
 
         if game.state.selected.contains(&i) {
-            color.y = 1.0;
+            color.z = 1.0;
+
         }
 
         render_objs.push(RenderMesh {
@@ -116,6 +115,18 @@ pub fn render(gl: &gl::Gl, game: &Game) {
     });
 
 
+    // Select pos
+
+    // grund plane mesh
+    let mut model_mat = na::Matrix4::identity();
+    model_mat = model_mat.prepend_nonuniform_scaling(&vector![0.2, 0.2, 1.0]);
+    model_mat = model_mat.append_translation(&game.state.select_pos);
+    render_objs.push(RenderMesh {
+            shader: &game.render_data.mesh_shader,
+            model_mat,
+            mesh: &game.render_data.plane,
+            color: vector![0.0, 0.0, 0.0]
+    });
 
 
     unsafe {

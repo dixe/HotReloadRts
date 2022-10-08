@@ -6,6 +6,8 @@ use crate::render;
 use crate::handle_inputs;
 use crate::commands::*;
 
+type ControllerType = camera::free_camera::Controller;
+
 // Store logic, which is lib and function points, seperate from the state. So we can reload logic. And call logic with &mut state
 pub struct Game {
     pub gl: gl::Gl,
@@ -19,7 +21,7 @@ pub struct Game {
 
     // CAMERA
     pub camera: camera::Camera,
-    pub camera_controller: camera::free_camera::Controller,
+    pub camera_controller: ControllerType,
 
 
     pub play_state: PlayState,
@@ -126,12 +128,14 @@ pub extern "Rust" fn initialize_state(gl: &gl::Gl) -> Box<dyn shared::SharedStat
     camera.move_to(na::Vector3::new(5.0, 2.0, 3.0));
     camera.look_at(na::Vector3::new(0.0, 0.0, 0.0));
 
+    let mut camera_controller: ControllerType = Default::default();
+    camera_controller.sens =  0.7;
 
     Box::new(Game {
         gl: gl.clone(),
         state,
         camera,
-        camera_controller: Default::default(),
+        camera_controller,
         render_data: render::RenderData::new(gl),
         logic,
 
@@ -146,10 +150,6 @@ pub struct Logic {
     step_fn: fn(&mut State),
     _lib: libloading::Library
 }
-
-
-
-
 
 
 pub fn reset(game: &mut Game) {

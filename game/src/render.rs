@@ -115,9 +115,7 @@ pub fn render(gl: &gl::Gl, game: &Game) {
     });
 
 
-    // Select pos
-
-    // grund plane mesh
+    // Select Position
     let mut model_mat = na::Matrix4::identity();
     model_mat = model_mat.prepend_nonuniform_scaling(&vector![0.2, 0.2, 1.0]);
     model_mat = model_mat.append_translation(&game.state.select_pos);
@@ -203,7 +201,38 @@ pub fn render(gl: &gl::Gl, game: &Game) {
 
         game.render_data.square.render(gl);
     }
+
+
+    // MOUSE
+    render_mouse(gl, game);
+
 }
+
+
+fn render_mouse(gl: &gl::Gl, game: &Game) {
+    unsafe {
+        gl.Clear(gl::DEPTH_BUFFER_BIT);
+        gl.BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
+        gl.Enable( gl::BLEND );
+    }
+
+
+    let cursor_w = 16.0;
+    let cursor_h = 24.0;
+
+    // calc clip space [-1,1] coors from screen space coords
+    let left = (-0.5 + (game.state.mouse_pos.x) / 1200.0) * 2.0;
+    let right = (-0.5 + (game.state.mouse_pos.x + cursor_w) / 1200.0) * 2.0;
+    let top =  (-0.5 + (game.state.mouse_pos.y) / 700.0) * -2.0;
+    let bottom =  (-0.5 + (game.state.mouse_pos.y + cursor_h) / 700.0) * -2.0;
+
+    println!(" mp: render {:?}", game.state.mouse_pos);
+    game.render_data.select_box_shader.set_used();
+    game.render_data.square.sub_data(gl, left, right, top, bottom);
+    game.render_data.square.render(gl);
+
+}
+
 
 fn shadow_map_render(gl: &gl::Gl, shadow_map: &shadow_map::ShadowMap, light_pos: na::Vector3::<f32>, render_objs: &[RenderMesh]) {
 

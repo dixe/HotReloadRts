@@ -13,6 +13,12 @@ pub fn handle_inputs(game: &mut Game, event_pump: &mut gl_lib::sdl2::EventPump) 
     // maybe don't do this here, but in a general per frame reset function
     game.state.command = Command::Empty;
 
+    let mouse_state = event_pump.mouse_state();
+    game.state.mouse_pos.x = mouse_state.x() as f32;
+    game.state.mouse_pos.y = mouse_state.y() as f32;
+
+    println!("mp_ input {:?}", game.state.mouse_pos);
+
     for event in event_pump.poll_iter() {
         game.camera_controller.update_events(event.clone());
         controller::on_input(event.clone(), &kb_map, game);

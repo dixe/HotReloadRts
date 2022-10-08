@@ -13,6 +13,9 @@ fn main() {
 
     let mut last_change = std::fs::metadata("E:/repos/HotReloadRts/target/debug/game.dll").unwrap().modified().unwrap();
 
+    // this make mouse be slower, so we need higher sens in controller.
+    sdl_setup.sdl.mouse().set_relative_mouse_mode(true);
+
     loop {
 
         game.state.update_and_render(gl, event_pump);

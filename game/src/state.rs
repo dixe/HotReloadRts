@@ -14,8 +14,8 @@ pub struct State {
     pub next_id: EntityId,
 
     pub select_box: Option<game::SelectBox>,
-
     pub selected: Vec::<usize>,
+    pub mouse_pos: na::Vector2::<f32>,
 
     pub positions: Vec::<V3>,
     pub velocities: Vec::<V3>,
@@ -62,6 +62,7 @@ impl State {
             move_targets: Default::default(),
             command: Command::Empty,
             select_pos:Default::default(),
+            mouse_pos: Default::default(),
         }
     }
 

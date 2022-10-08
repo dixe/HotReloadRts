@@ -10,11 +10,10 @@ use crate::render;
 // Store logic, which is lib and function points, seperate from the state. So we can reload logic. And call logic with &mut state
 pub struct Game {
     pub gl: gl::Gl,
+
     //SIMLULATION/LOGIC
     pub state: State,
     pub logic: Logic,
-
-    pub select_box: Option<SelectBox>,
 
     // ALL RENDER DATA, LIKE SHADERS MESHES SHADOW MAP ECT.
     pub render_data: render::RenderData,
@@ -30,11 +29,11 @@ impl shared::SharedState for Game {
 
         handle_inputs(self, event_pump);
 
-
         self.camera_controller.update_camera(&mut self.camera, self.state.dt);
 
         // run logic step
-        (self.logic.step_fn)(&mut self.state);
+        let view_mat = self.camera.projection() * self.camera.view();
+        (self.logic.step_fn)(&mut self.state, view_mat);
 
 
         // render
@@ -58,16 +57,37 @@ pub struct Selection {
     pub active_box : Option::<SelectBox>,
 }
 
+impl SelectBox {
+
+    pub fn min_x(&self) -> i32 {
+        self.start.x.min(self.current.x)
+    }
+
+    pub fn max_x(&self) -> i32 {
+        self.start.x.max(self.current.x)
+    }
+
+    pub fn min_y(&self) -> i32 {
+        self.start.y.min(self.current.y)
+    }
+
+    pub fn max_y(&self) -> i32 {
+        self.start.y.max(self.current.y)
+    }
+
+}
+
 
 
 pub fn load() -> Logic {
     let lib = shared::copy_and_load_lib("logic.dll");
 
-    let step_fn: libloading::Symbol<extern "Rust" fn(&mut State)> =
+    let step_fn: libloading::Symbol<extern "Rust" fn(&mut State, na::Matrix4::<f32>)> =
         unsafe {
            lib.get(b"step")
         }.expect("Load of step fn");
 
+    println!("Reloaded lib");
     Logic {
         step_fn: *step_fn,
         _lib : lib,
@@ -78,6 +98,8 @@ pub fn load() -> Logic {
 pub fn handle_inputs(game: &mut Game, event_pump: &mut gl_lib::sdl2::EventPump) {
     let kb_map = setup_keyboard_mapping();
 
+
+
     for event in event_pump.poll_iter() {
         game.camera_controller.update_events(event.clone());
         controller::on_input(event.clone(), &kb_map, game);
@@ -85,21 +107,55 @@ pub fn handle_inputs(game: &mut Game, event_pump: &mut gl_lib::sdl2::EventPump) 
         use sdl2::event::Event::*;
         match event.clone() {
             MouseButtonDown{mouse_btn, x, y, ..} => {
-                if game.select_box.is_none() && mouse_btn == sdl2::mouse::MouseButton::Left{
-                    game.select_box = Some(SelectBox {
+                if game.state.select_box.is_none() && mouse_btn == sdl2::mouse::MouseButton::Left{
+                    game.state.select_box = Some(SelectBox {
                         start: ScreenPos { x,y },
                         current: ScreenPos { x,y },
                     });
                 }
             },
             MouseMotion{mousestate, x, y, .. } => {
-                if let Some(sb) = &mut game.select_box {
+                if let Some(sb) = &mut game.state.select_box {
                     sb.current.x = x;
                     sb.current.y = y;
                 }
             },
             MouseButtonUp{mouse_btn, x, y, ..} => {
-                game.select_box = None;
+
+                if let Some(sb) = &mut game.state.select_box {
+
+                    game.state.selected.clear();
+
+                    let transform = game.camera.projection() * game.camera.view();
+
+                    // does not really belong here, can be on game. State just need to have a vec of selected items
+
+                    let count = game.state.positions.len();
+                    for i in 0..count {
+                        let mut homo_pos = game.state.positions[i].to_homogeneous();
+
+                        homo_pos.w = 1.0;
+                        let mut sp = transform * homo_pos;
+                        sp = sp / sp.w;
+
+                        let mut xy = sp.xy();
+
+                        xy.x = (xy.x + 1.0) * 600.0;
+                        xy.y = 700.0 - ((xy.y + 1.0) * 350.0);
+
+                        let x = xy.x as i32;
+                        let y = xy.y as i32;
+
+
+                        if x >= sb.min_x() && x <= sb.max_x()
+                            && y >= sb.min_y() && y <= sb.max_y() {
+                                game.state.selected.push(i);
+                            }
+                    }
+
+                }
+
+                game.state.select_box = None;
             },
             _ => {}
         }
@@ -129,7 +185,6 @@ pub extern "Rust" fn initialize_state(gl: &gl::Gl) -> Box<dyn shared::SharedStat
         camera,
         camera_controller: Default::default(),
         render_data: render::RenderData::new(gl),
-        select_box: None,
         logic,
 
     })
@@ -137,7 +192,7 @@ pub extern "Rust" fn initialize_state(gl: &gl::Gl) -> Box<dyn shared::SharedStat
 
 
 pub struct Logic {
-    step_fn: fn(&mut State),
+    step_fn: fn(&mut State, na::Matrix4::<f32>),
     _lib: libloading::Library
 }
 

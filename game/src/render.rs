@@ -88,11 +88,19 @@ pub fn render(gl: &gl::Gl, game: &Game) {
 
         // cal rotation of boid, based on dir
         model_mat = model_mat.append_translation(&game.state.positions[i]);
+
+
+        let mut color = na::Vector3::new(1.0, 0.0, 0.0);
+
+        if game.state.selected.contains(&i) {
+            color.y = 1.0;
+        }
+
         render_objs.push(RenderMesh {
             shader: &game.render_data.mesh_shader,
             model_mat,
             mesh: &game.render_data.boid,
-            color: na::Vector3::new(1.0, 0.0, 0.0),
+            color: color
         });
     }
 
@@ -152,7 +160,7 @@ pub fn render(gl: &gl::Gl, game: &Game) {
 
     // SELECT BOX
 
-    if let Some(sb) = game.select_box {
+    if let Some(sb) = game.state.select_box {
         let start = sb.start;
         let cur = sb.current;
 

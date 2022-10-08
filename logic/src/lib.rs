@@ -8,11 +8,10 @@ pub type V3 = na::Vector3::<f32>;
 
 
 #[no_mangle]
-pub extern "Rust" fn step(state: &mut game::State) {
+pub extern "Rust" fn step(state: &mut game::State, view_matrix: na::Matrix4::<f32>) {
 
     let dt = state.dt;
     let count = state.positions.len();
-
 
     for i in 0..count {
     }

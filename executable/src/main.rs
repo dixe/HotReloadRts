@@ -11,14 +11,13 @@ fn main() {
 
     let mut game = load(gl);
 
-    let mut last_change = std::fs::metadata("E:/repos/HerdGame/target/debug/game.dll").unwrap().modified().unwrap();
+    let mut last_change = std::fs::metadata("E:/repos/HotReloadRts/target/debug/game.dll").unwrap().modified().unwrap();
 
     loop {
 
         game.state.update_and_render(gl, event_pump);
 
-        let cur_last_change = std::fs::metadata("E:/repos/HerdGame/target/debug/game.dll").unwrap().modified().unwrap();
-
+        let cur_last_change = std::fs::metadata("E:/repos/HotReloadRts/target/debug/game.dll").unwrap().modified().unwrap();
         if cur_last_change > last_change {
             // Reload since new dll is more fresh
             // Drop is required for the new game to be replaced.
@@ -27,7 +26,7 @@ fn main() {
             drop(game);
             game = load(gl);
 
-            last_change = std::fs::metadata("E:/repos/HerdGame/target/debug/game.dll").unwrap().modified().unwrap();
+            last_change = std::fs::metadata("E:/repos/HotReloadRts/target/debug/game.dll").unwrap().modified().unwrap();
         }
 
         sdl_setup.window.gl_swap_window();

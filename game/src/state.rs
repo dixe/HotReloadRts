@@ -1,5 +1,6 @@
 use nalgebra as na;
 use nalgebra::vector;
+use crate::game;
 
 pub type EntityId = usize;
 pub type V3 = na::Vector3::<f32>;
@@ -9,18 +10,22 @@ pub type V3 = na::Vector3::<f32>;
 pub struct State {
     pub next_id: EntityId,
 
+    pub select_box: Option<game::SelectBox>,
+
+    pub selected: Vec::<usize>,
+
     pub positions: Vec::<V3>,
     pub velocities: Vec::<V3>,
     pub z_rotations: Vec::<f32>,
     pub steer: Vec::<Steer>,
-
 
     pub light: V3,
     pub sep_w: f32,
     pub align_w: f32,
     pub coh_w: f32,
     pub steer_force: f32,
-    pub dt: f32
+    pub dt: f32,
+
 }
 
 #[derive(Debug, Clone, Copy, Default)]
@@ -43,7 +48,9 @@ impl State {
             align_w: 1.0,
             coh_w: 1.0,
             steer_force: 5.0,
-            dt: 1.0/60.0
+            dt: 1.0/60.0,
+            select_box: None,
+            selected: vec![]
 
         }
     }

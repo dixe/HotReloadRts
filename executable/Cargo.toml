@@ -9,3 +9,7 @@ edition = "2021"
 libloading = "0.7"
 shared = { path = "../shared" }
 gl_lib = { path = "../../rust-gl-lib"}
+game = { path = "../game", optional = true }
+
+[features]
+no_reload = ["game"]

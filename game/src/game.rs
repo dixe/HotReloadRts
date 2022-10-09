@@ -5,8 +5,10 @@ use gl_lib::{gl, na, objects::gltf_mesh, camera};
 use crate::render;
 use crate::handle_inputs;
 use crate::commands::*;
+use crate::reload::*;
 
-type ControllerType = camera::free_camera::Controller;
+//type ControllerType = camera::free_camera::Controller;
+type ControllerType = camera::rts_camera::Controller;
 
 // Store logic, which is lib and function points, seperate from the state. So we can reload logic. And call logic with &mut state
 pub struct Game {
@@ -95,26 +97,6 @@ impl SelectBox {
 }
 
 
-
-pub fn load() -> Logic {
-    let lib = shared::copy_and_load_lib("logic.dll");
-
-    let step_fn: libloading::Symbol<extern "Rust" fn(&mut State)> =
-        unsafe {
-           lib.get(b"step")
-        }.expect("Load of step fn");
-
-    println!("Reloaded lib");
-    Logic {
-        step_fn: *step_fn,
-        _lib : lib,
-    }
-}
-
-
-
-
-
 /// For Initializing from main Exe
 #[no_mangle]
 pub extern "Rust" fn initialize_state(gl: &gl::Gl) -> Box<dyn shared::SharedState> {
@@ -123,13 +105,14 @@ pub extern "Rust" fn initialize_state(gl: &gl::Gl) -> Box<dyn shared::SharedStat
     let logic = load();
 
 
-
     let mut camera = camera::Camera::new(1200.0, 700.0);
-    camera.move_to(na::Vector3::new(5.0, 2.0, 3.0));
+
+    camera.move_to(na::Vector3::new(6.7, 6.5, 6.7));
     camera.look_at(na::Vector3::new(0.0, 0.0, 0.0));
 
     let mut camera_controller: ControllerType = Default::default();
     camera_controller.sens =  0.7;
+    camera_controller.speed = 10.0;
 
     Box::new(Game {
         gl: gl.clone(),
@@ -143,12 +126,6 @@ pub extern "Rust" fn initialize_state(gl: &gl::Gl) -> Box<dyn shared::SharedStat
         play_state: PlayState::General,
 
     })
-}
-
-
-pub struct Logic {
-    step_fn: fn(&mut State),
-    _lib: libloading::Library
 }
 
 

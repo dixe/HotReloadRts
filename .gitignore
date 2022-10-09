@@ -20,3 +20,5 @@ DynamicLibLoadExample*
 **/*#*
 
 .vs/*
+
+**/flamegraph*

@@ -1,35 +1,53 @@
 extern crate shared;
 use gl_lib::{gl, helpers};
 
-fn main() {
+#[cfg(feature = "no_reload")]
+extern crate game as code;
 
+
+fn main() {
     let sdl_setup = setup_window();
 
     let event_pump = &mut sdl_setup.sdl.event_pump().unwrap();
     let gl = &sdl_setup.gl;
 
 
+    #[cfg(not(feature = "no_reload"))]
     let mut game = load(gl);
 
+    #[cfg(feature = "no_reload")]
+    let mut game = code::game::initialize_state(gl);
+
+    #[cfg(not(feature = "no_reload"))]
     let mut last_change = std::fs::metadata("E:/repos/HotReloadRts/target/debug/game.dll").unwrap().modified().unwrap();
 
     // this make mouse be slower, so we need higher sens in controller.
     sdl_setup.sdl.mouse().set_relative_mouse_mode(true);
 
+
     loop {
 
+        #[cfg(not(feature = "no_reload"))]
         game.state.update_and_render(gl, event_pump);
 
-        let cur_last_change = std::fs::metadata("E:/repos/HotReloadRts/target/debug/game.dll").unwrap().modified().unwrap();
-        if cur_last_change > last_change {
-            // Reload since new dll is more fresh
-            // Drop is required for the new game to be replaced.
+        #[cfg(feature = "no_reload")]
+        game.update_and_render(gl, event_pump);
 
+        #[cfg(not(feature = "no_reload"))]
+        {
+            panic!();
+            let cur_last_change = std::fs::metadata("E:/repos/HotReloadRts/target/debug/game.dll").unwrap().modified().unwrap();
 
-            drop(game);
-            game = load(gl);
+            if cur_last_change > last_change {
+                // Reload since new dll is more fresh
+                // Drop is required for the new game to be replaced.
 
-            last_change = std::fs::metadata("E:/repos/HotReloadRts/target/debug/game.dll").unwrap().modified().unwrap();
+                drop(game);
+                game = load(gl);
+
+                last_change = std::fs::metadata("E:/repos/HotReloadRts/target/debug/game.dll").unwrap().modified().unwrap();
+            }
+
         }
 
         sdl_setup.window.gl_swap_window();
@@ -38,7 +56,14 @@ fn main() {
 
 
 fn setup_window() -> helpers::BasicSetup  {
-    let sdl_setup = helpers::setup_sdl().unwrap();
+
+    let sdl_setup = match helpers::setup_sdl() {
+        Ok(ss) => ss,
+        Err(e) => {
+            panic!("Error in setup {:?}",e);
+        }
+    };
+
     let gl = sdl_setup.gl.clone();
     // Set background color to white
     // enable depth testing

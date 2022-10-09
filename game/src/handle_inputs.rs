@@ -4,7 +4,7 @@ use gl_lib::na;
 use gl_lib::sdl2::{self, keyboard::Keycode};
 use crate::game::*;
 use crate::commands::*;
-
+use crate::V3;
 
 pub fn handle_inputs(game: &mut Game, event_pump: &mut gl_lib::sdl2::EventPump) {
     let kb_map = setup_keyboard_mapping();
@@ -17,11 +17,16 @@ pub fn handle_inputs(game: &mut Game, event_pump: &mut gl_lib::sdl2::EventPump) 
     game.state.mouse_pos.x = mouse_state.x() as f32;
     game.state.mouse_pos.y = mouse_state.y() as f32;
 
-    println!("mp_ input {:?}", game.state.mouse_pos);
 
     for event in event_pump.poll_iter() {
         game.camera_controller.update_events(event.clone());
         controller::on_input(event.clone(), &kb_map, game);
+
+
+        if event.is_keyboard() {
+            handle_keyboard(&event, game);
+        }
+
 
         if event.is_mouse() {
             match game.play_state {
@@ -41,6 +46,32 @@ pub fn handle_inputs(game: &mut Game, event_pump: &mut gl_lib::sdl2::EventPump) 
 }
 
 
+fn handle_keyboard(event: &sdl2::event::Event, game: &mut Game) {
+
+
+    use sdl2::event::Event::*;
+    use sdl2::keyboard::Keycode::{self, * };
+
+    match event.clone() {
+        KeyDown{keycode: Some(kc), .. } => {
+             match kc {
+                 S => {
+                     game.state.command = Command::Stop
+                 },
+                 A => {
+                     // should set playState to ApplyCommand attack. But we cannot use command::Attack, since that requires a target?
+                     // maybe just set target to 0,0,-1??
+                     //game.play_state = ApplyCommand(Command::
+                 }
+                 _ =>{}
+            }
+        },
+        _ => {}
+    }
+
+
+}
+
 fn handle_click(event: &sdl2::event::Event, game: &mut Game) {
 
     use sdl2::event::Event::*;
@@ -49,31 +80,45 @@ fn handle_click(event: &sdl2::event::Event, game: &mut Game) {
             if mouse_btn == sdl2::mouse::MouseButton::Right {
 
                 // Do a raycast to grund plane, to see where our click is in world space
-                // logic from here https://www.cs.princeton.edu/courses/archive/fall00/cs426/lectures/raycast/sld017.htm
+                let ray_info = RayInfo {
+                    p0: game.camera.pos(),
+                    v: game.camera.screen_to_ray(x as f32, (700 - y) as f32)
+                };
 
-                let norm = na::Vector3::new(0.0, 0.0, 1.0);
-                let p0 =  game.camera.pos();
-
-                // our y 0 is top of screen, camera assumes y=0 is bottom
-                let v = game.camera.screen_to_ray(x as f32, (700 - y) as f32);
-
-
-                let plane_p = na::Vector3::new(1.0, 0.0, 0.0);
-                let d =  -plane_p.dot(&norm);
-                let t = -(p0.dot(&norm) + d) / (v.dot(&norm));
-                let hit_p = p0 + t * v;
-
-
+                // maybe return RayInfo from camera??
+                let hit_p = raycast_ground_plane(ray_info);
                 // Update selected pos to be, lift if above the ground pplane by a little bit to avoid clipping
-                game.state.select_pos = hit_p + vector![0.0, 0.0, 0.01];
-
+                game.state.select_pos = hit_p + vector![0.0, 0.0, 0.1];
                 let target = Target::Position(hit_p.x, hit_p.y);
                 game.state.command = Command::DefaultRightClick(target);
 
             }
+
+
+            if mouse_btn == sdl2::mouse::MouseButton::Middle {
+                game.state.command = Command::Stop;
+            }
+
         },
         _ => {}
     }
+}
+
+#[derive(Debug, Clone, Copy)]
+struct RayInfo {
+    p0: V3,
+    v: V3,
+}
+
+// logic from here https://www.cs.princeton.edu/courses/archive/fall00/cs426/lectures/raycast/sld017.htm
+fn raycast_ground_plane(RayInfo { p0, v }: RayInfo) -> V3 {
+
+    let norm = na::Vector3::new(0.0, 0.0, 1.0);
+    let plane_p = na::Vector3::new(1.0, 0.0, 0.0);
+
+    let d =  -plane_p.dot(&norm);
+    let t = -(p0.dot(&norm) + d) / (v.dot(&norm));
+    p0 + t * v
 }
 
 
@@ -149,6 +194,5 @@ fn setup_keyboard_mapping() -> controller::ControllerMapping<Game> {
     kb_map.exit(Keycode::Escape);
     kb_map.add_on_press(R, reload_assets);
     kb_map.add_on_press(Q, reset);
-
     kb_map
 }

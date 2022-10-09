@@ -14,32 +14,24 @@ pub struct State {
     pub next_id: EntityId,
 
     pub select_box: Option<game::SelectBox>,
-    pub selected: Vec::<usize>,
+
+    pub selected: Vec::<EntityId>,
     pub mouse_pos: na::Vector2::<f32>,
 
+
+    // ENTITY PROPERTIES
     pub positions: Vec::<V3>,
     pub velocities: Vec::<V3>,
     pub z_rotations: Vec::<f32>,
-    pub steer: Vec::<Steer>,
-
     pub move_targets: IntMap<EntityId, V3>,
+    //pub commands: Vec::<Command>,
 
-    pub select_pos: V3,
 
+    // GLOBAL STUFF
+    pub select_pos: V3, // should be 1 for each entity, or in a int map maybe, or just not used, but render the move targets for selected units
     pub light: V3,
-    pub sep_w: f32,
-    pub align_w: f32,
-    pub coh_w: f32,
-    pub steer_force: f32,
     pub dt: f32,
-
     pub command: Command,
-}
-
-#[derive(Debug, Clone, Copy, Default)]
-pub struct Steer {
-    pub seperate: V3,
-    pub run_from: V3
 }
 
 
@@ -51,17 +43,16 @@ impl State {
             velocities: vec![],
             z_rotations: vec![],
             light: vector![0.0, -30.0, 30.0],
-            steer: vec![],
-            sep_w: 1.5,
-            align_w: 1.0,
-            coh_w: 1.0,
-            steer_force: 5.0,
+            move_targets: Default::default(),
+
+            //commands: vec![],
             dt: 1.0/60.0,
+
             select_box: None,
             selected: vec![],
-            move_targets: Default::default(),
+
             command: Command::Empty,
-            select_pos:Default::default(),
+            select_pos: V3::new(0.0, 0.0, -1.0),
             mouse_pos: Default::default(),
         }
     }
@@ -70,7 +61,8 @@ impl State {
         self.positions.push(pos);
         self.velocities.push(na::Vector3::new(0.0, 0.0, 0.0));
         self.z_rotations.push(0.0);
-        self.steer.push(Default::default());
+        //self.commands.push(Command::Empty);
+
     }
 
 }
@@ -81,7 +73,7 @@ pub fn init() -> State {
 
     let mut state = State::new();
 
-    for i in 1..3 {
+    for i in 1..100 {
         for j in 1..5 {
             state.add_entity(vector![i as f32 * 1.0, j as f32 * 1.0, 0.5]);
         }

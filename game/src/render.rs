@@ -226,7 +226,6 @@ fn render_mouse(gl: &gl::Gl, game: &Game) {
     let top =  (-0.5 + (game.state.mouse_pos.y) / 700.0) * -2.0;
     let bottom =  (-0.5 + (game.state.mouse_pos.y + cursor_h) / 700.0) * -2.0;
 
-    println!(" mp: render {:?}", game.state.mouse_pos);
     game.render_data.select_box_shader.set_used();
     game.render_data.square.sub_data(gl, left, right, top, bottom);
     game.render_data.square.render(gl);

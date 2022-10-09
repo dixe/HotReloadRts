@@ -6,3 +6,7 @@ members = [
    "logic"
 
 ]
+default-member = ["executable"]
+
+[profile.release]
+debug = true

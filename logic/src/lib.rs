@@ -13,7 +13,6 @@ pub extern "Rust" fn step(state: &mut game::State) {
     let dt = state.dt;
     let count = state.positions.len();
 
-    println!("mp_step {:?}", state.mouse_pos);
 
     if state.selected.len() > 0 && state.command != Command::Empty {
         // apply state.command to every item in selection
@@ -31,6 +30,13 @@ pub extern "Rust" fn step(state: &mut game::State) {
                         }
                     }
                 },
+                Command::Stop => {
+                    // remove target
+
+                    let removed = state.move_targets.remove(&select_index);
+                    state.velocities[select_index] = V3::new(0.0, 0.0, 0.0);
+
+                }
                 _ => {
                     todo!();
                 }
@@ -45,7 +51,7 @@ pub extern "Rust" fn step(state: &mut game::State) {
     // Update positions and rotation
     for i in 0..count {
         if let Some(target) = state.move_targets.get(&i) {
-            state.velocities[i] =  (target - state.positions[i]).normalize();
+            state.velocities[i] = (target - state.positions[i]).normalize();
         }
         state.positions[i] += state.velocities[i] * dt;
     }

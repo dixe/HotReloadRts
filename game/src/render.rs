@@ -26,10 +26,12 @@ pub struct RenderData {
 impl RenderData {
 
     pub fn new(gl: &gl::Gl) -> Self {
-        let base_path: std::path::PathBuf = "E:/repos/HerdGame/assets".to_string().into();
+        let base_path: std::path::PathBuf = "E:/repos/HotReloadRts/assets".to_string().into();
 
         let hashmap = std::collections::HashMap::new();
-        let boids_gltf = gltf_mesh::meshes_from_gltf(&"E:/repos/HerdGame/assets/boid.glb", &hashmap).unwrap();
+
+        let boids_gltf = gltf_mesh::meshes_from_gltf(&"E:/repos/HotReloadRts/assets/boid.glb", &hashmap).unwrap();
+
         let boid = boids_gltf.get_mesh(gl, "Boid").unwrap();
 
         let plane = plane::Plane::new(gl);
@@ -73,22 +75,22 @@ pub fn render(gl: &gl::Gl, game: &Game) {
 
     // Setup render meshes
     let mut render_objs = vec![];
-    for i in 0..game.state.positions.len() {
+    for i in 0..game.state.entities.positions.len() {
 
         let mut model_mat = na::Matrix4::identity();
         model_mat = model_mat.append_nonuniform_scaling(&na::Vector3::new(0.2, 0.2, 0.2));
-        let rotation = na::geometry::Rotation::from_euler_angles(0.0, 0.0, game.state.z_rotations[i]);
+        let rotation = game.state.entities.z_rotations[i];
 
         model_mat = rotation.to_homogeneous()* model_mat;
 
         // cal rotation of boid, based on dir
-        model_mat = model_mat.append_translation(&game.state.positions[i]);
+        model_mat = model_mat.append_translation(&game.state.entities.positions[i]);
 
 
         let mut color = vector![0.0, 0.0, 0.0];
 
-        color.x = game.state.positions[i].x / 3.0;
-        color.y = game.state.positions[i].y / 5.0;
+        color.x = game.state.entities.positions[i].x / 3.0;
+        color.y = game.state.entities.positions[i].y / 5.0;
 
         if game.state.selected.contains(&i) {
             color.z = 1.0;
@@ -130,8 +132,6 @@ pub fn render(gl: &gl::Gl, game: &Game) {
     unsafe {
         gl.Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
     }
-
-
 
 
     // SHADOW MAP AND ALL ENTITIES
@@ -205,7 +205,6 @@ pub fn render(gl: &gl::Gl, game: &Game) {
 
     // MOUSE
     render_mouse(gl, game);
-
 }
 
 
@@ -215,7 +214,6 @@ fn render_mouse(gl: &gl::Gl, game: &Game) {
         gl.BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
         gl.Enable( gl::BLEND );
     }
-
 
     let cursor_w = 16.0;
     let cursor_h = 24.0;
@@ -227,6 +225,8 @@ fn render_mouse(gl: &gl::Gl, game: &Game) {
     let bottom =  (-0.5 + (game.state.mouse_pos.y + cursor_h) / 700.0) * -2.0;
 
     game.render_data.select_box_shader.set_used();
+
+    //println!("Mouse at {:?}", (left, right, top, bottom));
     game.render_data.square.sub_data(gl, left, right, top, bottom);
     game.render_data.square.render(gl);
 

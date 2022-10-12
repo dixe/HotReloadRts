@@ -1,7 +1,7 @@
 extern crate shared;
 use libloading;
 use crate::state::*;
-use gl_lib::{gl, na, objects::gltf_mesh, camera};
+use gl_lib::{gl, na, objects::{gltf_mesh, square}, camera};
 use crate::render;
 use crate::handle_inputs;
 use crate::commands::*;
@@ -138,7 +138,8 @@ pub fn reset(game: &mut Game) {
 pub fn reload_assets(game: &mut Game) {
 
     // maybe move this to a function in render
-    let base_path: std::path::PathBuf = "E:/repos/HerdGame/assets".to_string().into();
+    let base_path: std::path::PathBuf = "E:/repos/HotReloadRts/assets".to_string().into();
+
     match render::create_shader(&game.gl, &base_path, "mesh") {
         Ok(shader) => {
             game.render_data.mesh_shader = shader;
@@ -152,16 +153,18 @@ pub fn reload_assets(game: &mut Game) {
     match render::create_shader(&game.gl, &base_path, "select_box") {
         Ok(shader) => {
             game.render_data.select_box_shader = shader;
-            println!("Reloading selec_box shader");
+            println!("Reloaded selec_box shader");
         },
         Err(err) => {
             println!("{:?}", err);
         },
     };
 
+    // Kind of a hack, since not recreating this make binding the vbo and sub data fail with gl 1282
+    game.render_data.square = square::Square::new(&game.gl);
 
     let hashmap = std::collections::HashMap::new();
-    match gltf_mesh::meshes_from_gltf(&"E:/repos/HerdGame/assets/boid.glb", &hashmap) {
+    match gltf_mesh::meshes_from_gltf(&"E:/repos/HotReloadRts/assets/boid.glb", &hashmap) {
         Ok(boid_gltf) => {
             match boid_gltf.get_mesh(&game.gl, "Boid") {
                 Some(boid) => {

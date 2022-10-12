@@ -8,7 +8,6 @@ edition = "2021"
 [dependencies]
 shared = { path = "../shared" }
 libloading = "0.7"
-gl_lib = { path = "../../rust-gl-lib"}
 nalgebra = "0.31.1"
 failure = "0.1"
 nohash-hasher = "0.2.0"
@@ -16,7 +15,9 @@ nohash-hasher = "0.2.0"
 [features]
 no_reload = []
 
-
+[dependencies.gl_lib]
+path = "../../rust-gl-lib"
+features = [] # can set "debug" here to get gl debug output
 
 [lib]
 name = "game"

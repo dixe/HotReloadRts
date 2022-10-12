@@ -35,7 +35,6 @@ fn main() {
 
         #[cfg(not(feature = "no_reload"))]
         {
-            panic!();
             let cur_last_change = std::fs::metadata("E:/repos/HotReloadRts/target/debug/game.dll").unwrap().modified().unwrap();
 
             if cur_last_change > last_change {

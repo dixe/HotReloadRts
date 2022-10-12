@@ -4,7 +4,7 @@ use gl_lib::na;
 use gl_lib::sdl2::{self, keyboard::Keycode};
 use crate::game::*;
 use crate::commands::*;
-use crate::V3;
+use crate::math::V3;
 
 pub fn handle_inputs(game: &mut Game, event_pump: &mut gl_lib::sdl2::EventPump) {
     let kb_map = setup_keyboard_mapping();
@@ -153,18 +153,20 @@ fn handle_select_box(event: &sdl2::event::Event, game: &mut Game) {
                     sb.current.x = x;
                     sb.current.y = y;
 
-                    let count = game.state.positions.len();
+                    let count = game.state.entities.positions.len();
 
                     for i in 0..count {
-                        let sp = game.camera.world_pos_to_screen(game.state.positions[i]);
+                        let sp = game.camera.world_pos_to_screen(game.state.entities.positions[i]);
+
                         let screen_pos_i = ScreenPos {x: sp.x as i32, y: sp.y as i32};
 
 
+                        let radius = 30;
 
-                        if screen_pos_i.x >= sb.min_x() &&
-                            screen_pos_i.x <= sb.max_x() &&
-                            screen_pos_i.y >= sb.min_y() &&
-                            screen_pos_i.y <= sb.max_y() {
+                        if screen_pos_i.x >= sb.min_x() - radius &&
+                            screen_pos_i.x <= sb.max_x() + radius &&
+                            screen_pos_i.y >= sb.min_y() - radius &&
+                            screen_pos_i.y <= sb.max_y() + radius {
                                 game.tmp_buffer.push(i);
                             }
                     }

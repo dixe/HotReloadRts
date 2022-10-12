@@ -29,10 +29,16 @@ pub fn copy_and_load_lib(name: &str) -> libloading::Library {
 
 fn load_lib(from_path: &PathBuf, new_path: &PathBuf) -> libloading::Library {
 
+    let mut iter = 0;
     let mut lib = unsafe {libloading::Library::new(&new_path) };
-    while let Err(e) =  lib {
-        println!("Error loading lib {:?}", e);
-        println!("Copy files again");
+    while let Err(e) = lib {
+        iter += 1;
+        if iter > 8000 {
+            println!("Error loading lib {:?}", e);
+            println!("Copy files again");
+
+            iter = 0;
+        }
         copy_files(from_path, new_path);
         unsafe {
             lib = libloading::Library::new(&new_path);

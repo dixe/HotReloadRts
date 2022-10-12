@@ -5,8 +5,9 @@ Rts like combat
 
 
 Goals:
-[ ] selectable units
-[ ] baisc commands to units, move
+* [x] selectable units
+* [x] baisc commands to units, move
+
 
 
 # Hot reload

@@ -9,3 +9,8 @@ mod render;
 pub mod commands;
 
 mod reload;
+
+
+pub mod entity_system;
+
+pub mod math;

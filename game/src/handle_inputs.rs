@@ -148,6 +148,8 @@ fn handle_select_box(event: &sdl2::event::Event, game: &mut Game) {
             if mouse_btn == sdl2::mouse::MouseButton::Left {
 
                 if let Some(sb) = &mut game.state.select_box{
+                    let single_click = sb.min_x() == sb.max_x() && sb.min_y() == sb.max_y();
+
                     game.tmp_buffer.clear();
 
                     sb.current.x = x;
@@ -168,7 +170,25 @@ fn handle_select_box(event: &sdl2::event::Event, game: &mut Game) {
                             screen_pos_i.y >= sb.min_y() - radius &&
                             screen_pos_i.y <= sb.max_y() + radius {
                                 game.tmp_buffer.push(i);
+
                             }
+
+                        if single_click && game.tmp_buffer.len() > 0 {
+                            // find the closest to click
+                            let mut cur_min_d = 10000.0;
+                            let mut cur_index = 0;
+                            for &index in &game.tmp_buffer {
+                                let d = (sp - na::Vector2::new(sb.min_x() as f32, sb.min_y() as f32)).magnitude();
+                                if d < cur_min_d {
+                                    cur_index = index;
+                                    cur_min_d = d
+                                }
+                            }
+
+                            game.tmp_buffer.clear();
+                            game.tmp_buffer.push(cur_index);
+
+                        }
                     }
                 }
 
@@ -177,6 +197,7 @@ fn handle_select_box(event: &sdl2::event::Event, game: &mut Game) {
                     game.state.selected.clear();
                     for &entity in &game.tmp_buffer {
                         game.state.selected.push(entity);
+
                     }
                 }
 

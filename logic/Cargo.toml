@@ -9,7 +9,7 @@ edition = "2021"
 shared = { path = "../shared" }
 game = { path = "../game" }
 nalgebra = "0.31.1"
-
+rand = "0.8.5"
 
 [lib]
 name = "logic"

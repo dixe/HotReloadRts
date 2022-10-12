@@ -7,7 +7,10 @@ Rts like combat
 Goals:
 * [x] selectable units
 * [x] baisc commands to units, move
-
+* [ ] Baisc command card, for selected unit.
+* [ ] select all with ctrl + a
+* [ ] animation
+* [ ] sound
 
 
 # Hot reload

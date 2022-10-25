@@ -160,6 +160,18 @@ pub fn reload_assets(game: &mut Game) {
         },
     };
 
+    match render::create_shader(&game.gl, &base_path, "hp") {
+        Ok(shader) => {
+            game.render_data.hp_shader = shader;
+            println!("Reloaded hp shader");
+        },
+        Err(err) => {
+            println!("{:?}", err);
+        },
+    };
+
+
+
     // Kind of a hack, since not recreating this make binding the vbo and sub data fail with gl 1282
     game.render_data.square = square::Square::new(&game.gl);
 

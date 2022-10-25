@@ -20,7 +20,7 @@ pub struct RenderData {
     pub mesh_shader: shader::BaseShader,
     pub texture_shader: shader::BaseShader,
     pub select_box_shader: shader::BaseShader,
-
+    pub hp_shader: shader::BaseShader,
 }
 
 impl RenderData {
@@ -46,6 +46,7 @@ impl RenderData {
             mesh_shader: create_shader(gl, &base_path, "mesh").unwrap(),
             texture_shader: create_shader(gl, &base_path, "texture").unwrap(),
             select_box_shader: create_shader(gl, &base_path, "select_box").unwrap(),
+            hp_shader: create_shader(gl, &base_path, "hp").unwrap(),
         }
     }
 }
@@ -53,11 +54,13 @@ impl RenderData {
 
 pub fn create_shader(gl: &gl::Gl, root_path: &std::path::PathBuf, name: &str) -> Result<shader::BaseShader, failure::Error> {
     let vert_shader_path =  std::path::Path::new(root_path).join(format!("{}_shader.vert", name));
-    let vert_source = std::fs::read_to_string(vert_shader_path.clone()).expect(&format!("Could not reader vert shader file at: {:?}", vert_shader_path));
+    let vert_source = std::fs::read_to_string(vert_shader_path.clone())
+        .expect(&format!("Could not reader vert shader file at: {:?}", vert_shader_path));
 
 
     let frag_shader_path = std::path::Path::new(root_path).join(format!("{}_shader.frag", name));
-    let frag_source = std::fs::read_to_string(frag_shader_path.clone()).expect(&format!("Could not reader frag shader file at: {:?}", frag_shader_path));
+    let frag_source = std::fs::read_to_string(frag_shader_path.clone())
+        .expect(&format!("Could not reader frag shader file at: {:?}", frag_shader_path));
 
     shader::BaseShader::new(gl, &vert_source, &frag_source)
 }
@@ -87,14 +90,14 @@ pub fn render(gl: &gl::Gl, game: &Game) {
         model_mat = model_mat.append_translation(&game.state.entities.positions[i]);
 
 
-        let mut color = vector![0.0, 0.0, 0.0];
-
-        color.x = game.state.entities.positions[i].x / 3.0;
-        color.y = game.state.entities.positions[i].y / 5.0;
+        let mut color = vector![1.0, 0.1, 0.0];
 
         if game.state.selected.contains(&i) {
             color.z = 1.0;
+        }
 
+        if let Some(dmg) = game.state.entities.damage.get(&game.state.entities.entities[i]) {
+            color.x = dmg.health;
         }
 
         render_objs.push(RenderMesh {
@@ -203,8 +206,51 @@ pub fn render(gl: &gl::Gl, game: &Game) {
     }
 
 
+
+    render_health_bars(gl, game);
+
+
+
     // MOUSE
     render_mouse(gl, game);
+}
+
+
+fn render_health_bars(gl: &gl::Gl, game: &Game) {
+
+    // HEALTH BARS
+    for entity_id in &game.state.entities.entities {
+
+        let idx = game.state.entities.id_to_index.get(entity_id).unwrap();
+        let screen_pos = game.camera.world_pos_to_screen(game.state.entities.positions[*idx]);
+
+        let mut health = 1.0;
+        if let Some(dmg) = game.state.entities.damage.get(entity_id) {
+            health = dmg.health;
+        }
+
+
+        unsafe {
+            gl.Clear(gl::DEPTH_BUFFER_BIT);
+            gl.BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
+            gl.Enable( gl::BLEND );
+        }
+
+
+        let cs = game.camera.to_clip_space(screen_pos, 30.0, 10.0);
+
+        game.render_data.hp_shader.set_used();
+
+        game.render_data.hp_shader.set_f32(gl, "health", health);
+        game.render_data.hp_shader.set_f32(gl, "left", cs.left);
+        game.render_data.hp_shader.set_f32(gl, "right", cs.right);
+        game.render_data.hp_shader.set_f32(gl, "screen_w", game.camera.width);
+
+        game.render_data.square.sub_data(gl, cs.left, cs.right, cs.top, cs.bottom);
+        game.render_data.square.render(gl);
+
+    }
+
 }
 
 

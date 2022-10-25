@@ -5,6 +5,8 @@ use nalgebra as na;
 use rand::Rng;
 
 
+mod random_damage;
+
 pub type V3 = na::Vector3::<f32>;
 pub type Rot = Rotation2;//na::geometry::Rotation3::<f32>;
 
@@ -15,6 +17,8 @@ pub extern "Rust" fn step(state: &mut game::State) {
     let count = state.entities.positions.len();
 
     update_selected_command(state);
+
+    random_damage::damage(state);
 
     run_step(state);
 
@@ -56,7 +60,7 @@ fn update_selected_command(state: &mut game::State) {
 }
 
 
-
+// maybe return an manifold like thing for each entity. Instead of instaed
 fn run_step(state: &mut game::State) {
     let count = state.entities.positions.len();
     let dt = state.dt;

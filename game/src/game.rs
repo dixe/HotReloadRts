@@ -140,36 +140,7 @@ pub fn reload_assets(game: &mut Game) {
     // maybe move this to a function in render
     let base_path: std::path::PathBuf = "E:/repos/HotReloadRts/assets".to_string().into();
 
-    match render::create_shader(&game.gl, &base_path, "mesh") {
-        Ok(shader) => {
-            game.render_data.mesh_shader = shader;
-            println!("Reloaded mesh shader");
-        },
-        Err(err) => {
-            println!("{:?}", err);
-        },
-    };
-
-    match render::create_shader(&game.gl, &base_path, "select_box") {
-        Ok(shader) => {
-            game.render_data.select_box_shader = shader;
-            println!("Reloaded selec_box shader");
-        },
-        Err(err) => {
-            println!("{:?}", err);
-        },
-    };
-
-    match render::create_shader(&game.gl, &base_path, "hp") {
-        Ok(shader) => {
-            game.render_data.hp_shader = shader;
-            println!("Reloaded hp shader");
-        },
-        Err(err) => {
-            println!("{:?}", err);
-        },
-    };
-
+    game.render_data.shaders.reload(&game.gl, &base_path);
 
 
     // Kind of a hack, since not recreating this make binding the vbo and sub data fail with gl 1282

@@ -1,15 +1,16 @@
 use nalgebra as na;
 use nalgebra::vector;
 use crate::game;
-use crate::commands::Command;
+use crate::commands::{ Command, Action };
 use crate::entity_system::*;
+use crate::spells::*;
 use crate::math::*;
 
 
 // All into regarding the simulation
 #[derive(Debug)]
 pub struct State {
-    pub next_id: EntityId,
+
 
     pub select_box: Option<game::SelectBox>,
 
@@ -17,19 +18,24 @@ pub struct State {
     pub mouse_pos: na::Vector2::<f32>,
     pub entities: Entitites,
 
+    pub spells: Spells,
+
+
     // GLOBAL STUFF
     pub select_pos: V3, // should be 1 for each entity, or in a int map maybe, or just not used, but render the move targets for selected units
     pub light: V3,
     pub dt: f32,
     pub command: Command,
+    pub action: Action
+
 }
 
 
 impl State {
     pub fn new() -> Self {
         Self {
-            next_id: 1,
-            entities:  Default::default(),
+            entities: Default::default(),
+            spells: Default::default(),
             light: vector![0.0, -30.0, 30.0],
 
             //commands: vec![],
@@ -39,6 +45,8 @@ impl State {
             selected: vec![],
 
             command: Command::Empty,
+            action : Action::Move,
+
             select_pos: V3::new(0.0, 0.0, -1.0),
             mouse_pos: Default::default(),
         }

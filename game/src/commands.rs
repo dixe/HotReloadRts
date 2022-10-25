@@ -16,3 +16,9 @@ pub enum Target {
     Position(f32,f32),
     Entity(usize) // TODO: make an entityId, that can be used here, to refere to entity clicked
 }
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum Action {
+    Move,
+    Spell
+}

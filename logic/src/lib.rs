@@ -1,8 +1,10 @@
 extern crate game;
-use game::commands::{Command, Target};
+use game::commands::{Command, Target, Action};
 use game::math::*;
 use nalgebra as na;
 use rand::Rng;
+use game::entity_system::*;
+use game::spells;
 
 
 mod random_damage;
@@ -32,17 +34,28 @@ pub extern "Rust" fn step(state: &mut game::State) {
 fn update_selected_command(state: &mut game::State) {
     if state.selected.len() > 0 && state.command != Command::Empty {
         // apply state.command to every item in selection
-        for &select_index in &state.selected {
+        'update: for &select_index in &state.selected {
             // for now everything is units, so just do the command for all
 
             match state.command {
                 Command::DefaultRightClick(target) => {
-                    match target {
-                        Target::Position(x,y) => {
-                            state.entities.move_targets.insert(select_index, V3::new(x, y, 0.0));
+                    match state.action {
+                        Action::Move => {
+                            update_move_target(&mut state.entities.move_targets, target, select_index);
                         },
-                        _ => {
-                            todo!();
+                        Action::Spell => {
+
+                            match target {
+                                 Target::Position(x,y) => {
+                                     spells::cast_heal(V3::new(x, y, 0.1), &mut state.spells);
+                                 },
+                                _ => {
+                                    todo!();
+                                }
+                            }
+
+                            state.action = Action::Move;
+                            break 'update;
                         }
                     }
                 },
@@ -58,6 +71,20 @@ fn update_selected_command(state: &mut game::State) {
         }
     }
 }
+
+
+fn update_move_target(move_targets: &mut MoveTargets, target: Target, index: EntityIndex) {
+    match target {
+        Target::Position(x,y) => {
+            move_targets.insert(index, V3::new(x, y, 0.0));
+        },
+        _ => {
+            todo!();
+        }
+    }
+}
+
+
 
 
 // maybe return an manifold like thing for each entity. Instead of instaed
@@ -76,7 +103,6 @@ fn run_step(state: &mut game::State) {
 
             match move_res {
                 MoveUpdate::AtTarget => {
-
                     state.entities.move_targets.remove(&i);
                     state.entities.velocities[i] = V3::zeros();
                 },

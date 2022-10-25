@@ -62,6 +62,9 @@ fn handle_keyboard(event: &sdl2::event::Event, game: &mut Game) {
                      // should set playState to ApplyCommand attack. But we cannot use command::Attack, since that requires a target?
                      // maybe just set target to 0,0,-1??
                      //game.play_state = ApplyCommand(Command::
+                 },
+                 H => {
+                     game.state.action = Action::Spell;
                  }
                  _ =>{}
             }

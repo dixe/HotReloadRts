@@ -3,6 +3,8 @@ use nalgebra::vector;
 use gl_lib::{gl, na, objects::{plane, mesh, shadow_map, texture_quad, square, gltf_mesh}, shader::{self, Shader}};
 use crate::game::*;
 
+include!(concat!(env!("OUT_DIR"), "/shaders_gen.rs"));
+
 
 pub struct RenderData {
 
@@ -17,10 +19,7 @@ pub struct RenderData {
     pub shadow_map: shadow_map::ShadowMap,
 
     // SHADERS
-    pub mesh_shader: shader::BaseShader,
-    pub texture_shader: shader::BaseShader,
-    pub select_box_shader: shader::BaseShader,
-    pub hp_shader: shader::BaseShader,
+    pub shaders: Shaders,
 }
 
 impl RenderData {
@@ -43,10 +42,7 @@ impl RenderData {
             square: square::Square::new(gl),
             shadow_map: shadow_map::ShadowMap::new(&gl),
             tex_quad: texture_quad::TextureQuad::new(&gl),
-            mesh_shader: create_shader(gl, &base_path, "mesh").unwrap(),
-            texture_shader: create_shader(gl, &base_path, "texture").unwrap(),
-            select_box_shader: create_shader(gl, &base_path, "select_box").unwrap(),
-            hp_shader: create_shader(gl, &base_path, "hp").unwrap(),
+            shaders: Shaders::new(gl, &base_path),
         }
     }
 }
@@ -76,6 +72,18 @@ pub struct RenderMesh<'a> {
 
 pub fn render(gl: &gl::Gl, game: &Game) {
 
+
+    render_entities(gl, game);
+
+    render_select_box(gl, game);
+
+    render_health_bars(gl, game);
+
+    render_mouse(gl, game);
+}
+
+
+fn render_entities(gl: &gl::Gl, game: &Game) {
     // Setup render meshes
     let mut render_objs = vec![];
     for i in 0..game.state.entities.positions.len() {
@@ -96,12 +104,8 @@ pub fn render(gl: &gl::Gl, game: &Game) {
             color.z = 1.0;
         }
 
-        if let Some(dmg) = game.state.entities.damage.get(&game.state.entities.entities[i]) {
-            color.x = dmg.health;
-        }
-
         render_objs.push(RenderMesh {
-            shader: &game.render_data.mesh_shader,
+            shader: &game.render_data.shaders.mesh_shader,
             model_mat,
             mesh: &game.render_data.boid,
             color: color
@@ -113,7 +117,7 @@ pub fn render(gl: &gl::Gl, game: &Game) {
     let mut model_mat = na::Matrix4::identity();
     model_mat = model_mat.prepend_nonuniform_scaling(&vector![plane_scale, plane_scale, 1.0]);
     render_objs.push(RenderMesh {
-            shader: &game.render_data.mesh_shader,
+            shader: &game.render_data.shaders.mesh_shader,
             model_mat,
             mesh: &game.render_data.plane,
             color: vector![23.0/255.0, 145.0/255.0, 40.0/255.0]
@@ -125,7 +129,7 @@ pub fn render(gl: &gl::Gl, game: &Game) {
     model_mat = model_mat.prepend_nonuniform_scaling(&vector![0.2, 0.2, 1.0]);
     model_mat = model_mat.append_translation(&game.state.select_pos);
     render_objs.push(RenderMesh {
-            shader: &game.render_data.mesh_shader,
+            shader: &game.render_data.shaders.mesh_shader,
             model_mat,
             mesh: &game.render_data.plane,
             color: vector![0.0, 0.0, 0.0]
@@ -152,6 +156,26 @@ pub fn render(gl: &gl::Gl, game: &Game) {
     }
 
 
+    // SPELLS
+    for i in 0..game.state.spells.pos.len() {
+
+        let pos =  game.state.spells.pos[i];
+
+        let mut model_mat = na::Matrix4::identity();
+        model_mat = model_mat.prepend_nonuniform_scaling(&vector![1.0, 1.0, 1.0]);
+        model_mat = model_mat.append_translation(&pos);
+        render_objs.push(RenderMesh {
+            shader: &game.render_data.shaders.mesh_shader,
+            model_mat,
+            mesh: &game.render_data.plane,
+            color: vector![1.0, 1.0, 1.0]
+        });
+
+    }
+
+
+
+
     let view =  game.camera.view();
     let projection = game.camera.projection();
 
@@ -168,9 +192,9 @@ pub fn render(gl: &gl::Gl, game: &Game) {
         ro.mesh.render(gl);
     }
 
+}
 
-
-    // SELECT BOX
+fn render_select_box(gl: &gl::Gl, game: &Game) {
 
     if let Some(sb) = game.state.select_box {
         let start = sb.start;
@@ -193,7 +217,7 @@ pub fn render(gl: &gl::Gl, game: &Game) {
         game.render_data.square.sub_data(gl, left, right, top, bottom);
 
         // render square
-        game.render_data.select_box_shader.set_used();
+        game.render_data.shaders.select_box_shader.set_used();
 
 
         unsafe {
@@ -204,17 +228,7 @@ pub fn render(gl: &gl::Gl, game: &Game) {
 
         game.render_data.square.render(gl);
     }
-
-
-
-    render_health_bars(gl, game);
-
-
-
-    // MOUSE
-    render_mouse(gl, game);
 }
-
 
 fn render_health_bars(gl: &gl::Gl, game: &Game) {
 
@@ -239,12 +253,12 @@ fn render_health_bars(gl: &gl::Gl, game: &Game) {
 
         let cs = game.camera.to_clip_space(screen_pos, 30.0, 10.0);
 
-        game.render_data.hp_shader.set_used();
+        game.render_data.shaders.hp_shader.set_used();
 
-        game.render_data.hp_shader.set_f32(gl, "health", health);
-        game.render_data.hp_shader.set_f32(gl, "left", cs.left);
-        game.render_data.hp_shader.set_f32(gl, "right", cs.right);
-        game.render_data.hp_shader.set_f32(gl, "screen_w", game.camera.width);
+        game.render_data.shaders.hp_shader.set_f32(gl, "health", health);
+        game.render_data.shaders.hp_shader.set_f32(gl, "left", cs.left);
+        game.render_data.shaders.hp_shader.set_f32(gl, "right", cs.right);
+        game.render_data.shaders.hp_shader.set_f32(gl, "screen_w", game.camera.width);
 
         game.render_data.square.sub_data(gl, cs.left, cs.right, cs.top, cs.bottom);
         game.render_data.square.render(gl);
@@ -270,13 +284,14 @@ fn render_mouse(gl: &gl::Gl, game: &Game) {
     let top =  (-0.5 + (game.state.mouse_pos.y) / 700.0) * -2.0;
     let bottom =  (-0.5 + (game.state.mouse_pos.y + cursor_h) / 700.0) * -2.0;
 
-    game.render_data.select_box_shader.set_used();
+    game.render_data.shaders.select_box_shader.set_used();
 
     //println!("Mouse at {:?}", (left, right, top, bottom));
     game.render_data.square.sub_data(gl, left, right, top, bottom);
     game.render_data.square.render(gl);
 
 }
+
 
 
 fn shadow_map_render(gl: &gl::Gl, shadow_map: &shadow_map::ShadowMap, light_pos: na::Vector3::<f32>, render_objs: &[RenderMesh]) {

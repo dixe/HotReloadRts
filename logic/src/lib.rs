@@ -7,7 +7,9 @@ use game::entity_system::*;
 use game::spells;
 
 
-mod random_damage;
+mod damage;
+mod spell_logic;
+
 
 pub type V3 = na::Vector3::<f32>;
 pub type Rot = Rotation2;//na::geometry::Rotation3::<f32>;
@@ -16,14 +18,24 @@ pub type Rot = Rotation2;//na::geometry::Rotation3::<f32>;
 pub extern "Rust" fn step(state: &mut game::State) {
 
     let dt = state.dt;
-    let count = state.entities.positions.len();
+
 
     update_selected_command(state);
 
-    random_damage::damage(state);
+    damage::damage(state);
+
+    spell_logic::update_spells(state);
 
     run_step(state);
 
+    // remove dead entities
+    let dead = damage::find_dead(&state.entities.damage);
+
+    for id in &dead {
+        state.entities.remove(id);
+    }
+
+    let count = state.entities.positions.len();
     // Update positions
     for i in 0..count {
         state.entities.positions[i] += state.entities.velocities[i] * dt;
@@ -47,7 +59,7 @@ fn update_selected_command(state: &mut game::State) {
 
                             match target {
                                  Target::Position(x,y) => {
-                                     spells::cast_heal(V3::new(x, y, 0.1), &mut state.spells);
+                                     spells::cast_heal(V3::new(x, y, 0.0), &mut state.spells);
                                  },
                                 _ => {
                                     todo!();
@@ -85,9 +97,7 @@ fn update_move_target(move_targets: &mut MoveTargets, target: Target, index: Ent
 }
 
 
-
-
-// maybe return an manifold like thing for each entity. Instead of instaed
+// maybe return an manifold like thing for each entity. Instead of directly manipulation the state
 fn run_step(state: &mut game::State) {
     let count = state.entities.positions.len();
     let dt = state.dt;
@@ -95,7 +105,7 @@ fn run_step(state: &mut game::State) {
     // Run logic based on entity state
     // State is based on which tables entity has entry, fx move_target will trigger move to logic
     // nothing will trigger spread
-    // TODO: hold will trigger holding position
+
     for i in 0..count {
         if let Some(target) = state.entities.move_targets.get(&i) {
 

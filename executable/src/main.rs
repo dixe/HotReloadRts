@@ -89,6 +89,7 @@ fn load(gl: &gl::Gl) -> Game {
             lib.get(b"initialize_state")
         }.expect("Load of initi function");
 
+    println!("Reloaded Game logic");
 
     Game {
         state: init_fn(gl),

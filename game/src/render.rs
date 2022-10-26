@@ -49,12 +49,12 @@ impl RenderData {
 
 
 pub fn create_shader(gl: &gl::Gl, root_path: &std::path::PathBuf, name: &str) -> Result<shader::BaseShader, failure::Error> {
-    let vert_shader_path =  std::path::Path::new(root_path).join(format!("{}_shader.vert", name));
+    let vert_shader_path =  std::path::Path::new(root_path).join(format!("{}.vert", name));
     let vert_source = std::fs::read_to_string(vert_shader_path.clone())
         .expect(&format!("Could not reader vert shader file at: {:?}", vert_shader_path));
 
 
-    let frag_shader_path = std::path::Path::new(root_path).join(format!("{}_shader.frag", name));
+    let frag_shader_path = std::path::Path::new(root_path).join(format!("{}.frag", name));
     let frag_source = std::fs::read_to_string(frag_shader_path.clone())
         .expect(&format!("Could not reader frag shader file at: {:?}", frag_shader_path));
 
@@ -73,6 +73,34 @@ pub struct RenderMesh<'a> {
 pub fn render(gl: &gl::Gl, game: &Game) {
 
 
+    // set shader uniforms
+    let light_pos = na::Vector3::new(0.0, 0.0, 30.0);
+
+
+    let light_space_mat = game.render_data.shadow_map.light_space_mat(light_pos);
+    let ms = &game.render_data.shaders.mesh_shader;
+
+
+    let view =  game.camera.view();
+    let projection = game.camera.projection();
+
+
+    ms.set_used();
+
+    ms.set_vec3(gl, "lightColor", na::Vector3::new(1.0, 1.0, 1.0));
+    ms.set_vec3(gl, "lightPos", light_pos);
+    ms.set_mat4(gl, "view", view);
+    ms.set_mat4(gl, "projection", projection);
+    ms.set_mat4(gl, "lightSpaceMat", light_space_mat);
+
+
+    let ss = &game.render_data.shaders.spell_shader;
+
+    ss.set_mat4(gl, "view", view);
+    ss.set_mat4(gl, "projection", projection);
+
+
+
     render_entities(gl, game);
 
     render_select_box(gl, game);
@@ -86,6 +114,16 @@ pub fn render(gl: &gl::Gl, game: &Game) {
 fn render_entities(gl: &gl::Gl, game: &Game) {
     // Setup render meshes
     let mut render_objs = vec![];
+
+    unsafe {
+        gl.Clear(gl::DEPTH_BUFFER_BIT);
+        gl.BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
+        gl.Enable( gl::BLEND );
+    }
+
+
+
+
     for i in 0..game.state.entities.positions.len() {
 
         let mut model_mat = na::Matrix4::identity();
@@ -94,9 +132,7 @@ fn render_entities(gl: &gl::Gl, game: &Game) {
 
         model_mat = rotation.to_homogeneous()* model_mat;
 
-        // cal rotation of boid, based on dir
         model_mat = model_mat.append_translation(&game.state.entities.positions[i]);
-
 
         let mut color = vector![1.0, 0.1, 0.0];
 
@@ -120,7 +156,7 @@ fn render_entities(gl: &gl::Gl, game: &Game) {
             shader: &game.render_data.shaders.mesh_shader,
             model_mat,
             mesh: &game.render_data.plane,
-            color: vector![23.0/255.0, 145.0/255.0, 40.0/255.0]
+            color: vector![150.0/255.0, 74.0/255.0, 39.0/255.0]
     });
 
 
@@ -140,9 +176,7 @@ fn render_entities(gl: &gl::Gl, game: &Game) {
         gl.Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
     }
 
-
     // SHADOW MAP AND ALL ENTITIES
-
     let light_pos = na::Vector3::new(0.0, 0.0, 30.0);
 
     shadow_map_render(gl, &game.render_data.shadow_map, light_pos, &render_objs);
@@ -157,38 +191,26 @@ fn render_entities(gl: &gl::Gl, game: &Game) {
 
 
     // SPELLS
+    let mut z_offset = 0.001;
     for i in 0..game.state.spells.pos.len() {
-
-        let pos =  game.state.spells.pos[i];
-
+        let pos = game.state.spells.pos[i];
+        let r = game.state.spells.radius[i];
         let mut model_mat = na::Matrix4::identity();
-        model_mat = model_mat.prepend_nonuniform_scaling(&vector![1.0, 1.0, 1.0]);
-        model_mat = model_mat.append_translation(&pos);
+        model_mat = model_mat.prepend_nonuniform_scaling(&vector![r * 2.0, r * 2.0, 1.0]);
+        model_mat = model_mat.append_translation(&(pos + vector![0.0, 0.0, z_offset]));
         render_objs.push(RenderMesh {
-            shader: &game.render_data.shaders.mesh_shader,
+            shader: &game.render_data.shaders.spell_shader,
             model_mat,
             mesh: &game.render_data.plane,
-            color: vector![1.0, 1.0, 1.0]
+            color: vector![7.0/255.0, 171.0/255.0, 40.0/255.0]
         });
-
+        z_offset += 0.001;
     }
-
-
-
-
-    let view =  game.camera.view();
-    let projection = game.camera.projection();
 
     for ro in render_objs {
         ro.shader.set_used();
-        ro.shader.set_vec3(gl, "lightColor", na::Vector3::new(1.0, 1.0, 1.0));
-        ro.shader.set_vec3(gl, "lightPos", light_pos);
-        ro.shader.set_mat4(gl, "view", view);
-        ro.shader.set_mat4(gl, "projection", projection);
         ro.shader.set_vec3(gl, "color", ro.color);
         ro.shader.set_mat4(gl, "model", ro.model_mat);
-        ro.shader.set_mat4(gl, "lightSpaceMat", light_space_mat);
-
         ro.mesh.render(gl);
     }
 
@@ -227,6 +249,7 @@ fn render_select_box(gl: &gl::Gl, game: &Game) {
         }
 
         game.render_data.square.render(gl);
+
     }
 }
 

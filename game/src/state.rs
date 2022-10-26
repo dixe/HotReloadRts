@@ -16,7 +16,7 @@ pub struct State {
 
     pub selected: Vec::<EntityId>,
     pub mouse_pos: na::Vector2::<f32>,
-    pub entities: Entitites,
+    pub entities: Entities,
 
     pub spells: Spells,
 

@@ -18,8 +18,8 @@ tick_interval: Vec::<f32>,
 }
 
 pub struct SpellInfo {
-    radius: f32,
-    time_remaining: f32,
+    pub radius: f32,
+    pub pos: V3
 }
 
 impl Spells {
@@ -35,20 +35,34 @@ impl Spells {
 
 pub type SpellFn = fn (SpellInfo, &mut state::State);
 
-pub fn heal_tick(si: SpellInfo, state: &mut state::State, dt: f32) {
 
+//TODO: maybe take only entities from state and dt, also return a result instead of taking a mutable
+pub fn heal_tick(si: SpellInfo, state: &mut state::State)  {
+
+
+    let hps = 1.0;
+    // find
+    for i in 0..state.entities.positions.len() {
+        let dist = (si.pos - state.entities.positions[i]).magnitude();
+
+        if dist < si.radius {
+            let id =  state.entities.entities[i];
+            if let Some(dmg) = state.entities.damage.get_mut(&id) {
+                dmg.health = f32::min(1.0, dmg.health + hps * state.dt);
+
+            }
+        }
+    }
 
 }
 
 
 pub fn cast_heal(pos: V3, spells: &mut Spells) {
-
     spells.cast_spell(CastSpell {
-        r: 3.0,
+        r: 1.0,
         pos,
         dur_sec: 5.0
     });
-
 }
 
 

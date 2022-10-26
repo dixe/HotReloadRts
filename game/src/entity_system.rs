@@ -8,8 +8,10 @@ pub type EntityIndex = usize;
 
 pub type MoveTargets = IntMap<EntityId, V3>;
 
+pub type DamageMap = IntMap<EntityId, EntityDamage>;
+
 #[derive(Debug, Default, Clone)]
-pub struct Entitites {
+pub struct Entities {
 
     next_id: usize,
     pub entities: Vec::<EntityId>,
@@ -23,7 +25,7 @@ pub struct Entitites {
 
     pub move_targets: MoveTargets,
 
-    pub damage: IntMap<EntityId, EntityDamage>,
+    pub damage: DamageMap,
 }
 
 
@@ -33,7 +35,7 @@ pub struct EntityDamage {
 }
 
 
-impl Entitites {
+impl Entities {
     pub fn add_entity(&mut self, pos: V3) -> EntityId {
         let id = self.get_id();
 
@@ -53,5 +55,26 @@ impl Entitites {
         self.next_id += 1;
 
         id
+    }
+
+    pub fn remove(&mut self, id: &EntityId) {
+
+        if let Some(index) = self.id_to_index.remove(id) {
+            // swap index so after swap delete everything is still cool
+            if let Some(&last_id) = self.entities.last() {
+                self.id_to_index.insert(last_id, index);
+            }
+            self.entities.swap_remove(index);
+            self.positions.swap_remove(index);
+            self.z_rotations.swap_remove(index);
+            self.velocities.swap_remove(index);
+
+        };
+
+        self.move_targets.remove(id);
+        self.damage.remove(id);
+        self.id_to_index.remove(id);
+
+
     }
 }

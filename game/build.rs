@@ -26,6 +26,7 @@ fn main() {
     }
 
 
+    File::create(&Path::new(&out_dir).join("shaders_gen.rs")).unwrap();
     fs::write(&Path::new(&out_dir).join("shaders_gen.rs"), shaders_file(names));
 }
 

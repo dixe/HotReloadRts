@@ -38,3 +38,50 @@ Maybe impl as a spell that affect an area, so units in that area are healed?
 
 
 # Spell System
+
+
+# Ai system
+
+How to make an enemy work. Fx baisc 
+
+Start ->
+  is low hp -> 
+    true -> heal self
+    false -> 
+       has nearby target ->
+         true -> kill target
+         false -> find target and move to target
+         
+
+This tree can be walked through each update step, and if a target dies, the next update step will find a new one.
+When hp is low heal will be cast
+
+## How to structure this as code?
+```
+One way is to create a tree
+struct Tree {
+ nodes: Vec::<Node> 
+}
+
+enum Node {
+  Branch(Branch),
+  Leaf(Leaf)
+}
+
+enum Desicion {
+  Move_to(V3),
+  Attack(entityId),
+  Cast_spell,
+  ..
+}
+
+struct Leaf {
+  decision_fn: fn (entitiyId, &state) -> Desicion,
+}
+
+struct Branch {
+  decision_fn: fn (entitiyId, &state) -> childIndex (usize), // function that take state and returns the next node to try, either   
+  children: usize, // number of children, 
+  children_start_index: usize, // which node in the tree that is the first child  
+}
+```

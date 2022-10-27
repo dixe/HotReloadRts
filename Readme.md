@@ -28,13 +28,15 @@ Sound system stuff
 
 # Health and damage <a name="health"></a>
 Parts:
-* [ ] Health, with health bars
-* [ ] healing
+* [x] Health, with health bars
+* [x] healing
 * [x] Random damage
-* [ ] death
+* [x] death
+
 
 ## Healing
 Maybe impl as a spell that affect an area, so units in that area are healed?
 
 
 # Spell System
+* [x] spell duration

@@ -79,10 +79,14 @@ struct Leaf {
   decision_fn: fn (entitiyId, &state) -> Desicion,
 }
 
+enum Child {
+  Left,
+  Right
+}
+
 struct Branch {
-  decision_fn: fn (entitiyId, &state) -> childIndex (usize), // function that take state and returns the next node to try, either   
-  children: usize, // number of children, 
-  children_start_index: usize, // which node in the tree that is the first child  
+  decision_fn: fn (entitiyId, &state) -> Child, // function that take state and returns either left or right child. A simple version is to use binary branching always
+  children_start: usize, // start of children, and then they are [..,left, right,..]
 }
 ```
 

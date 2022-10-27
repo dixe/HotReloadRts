@@ -1,0 +1,27 @@
+
+
+/*
+Format :
+label: Type, branch/leaf
+For branch branchFunction LeftLabel RightLabel
+for leaf leaf function
+*/
+root: Branch health_low heal kill;
+heal: Leaf heal_self;
+kill: Branch has_target in_range find_target;
+move_to: Branch in_range attack;
+
+// could be simpler by
+root: Branch health_low heal kill;
+heal: Leaf heal_self;
+kill: Leaf kill; // where kill either returns move_to_target, or attack or whatever
+
+
+
+
+
+
+// code that will be run inside if
+if let some(dmg) = state.damage.get(id) {
+
+}

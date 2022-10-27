@@ -85,3 +85,22 @@ struct Branch {
   children_start_index: usize, // which node in the tree that is the first child  
 }
 ```
+
+
+This will require a desicion state with current target, ect unless we set this in the state in tables?? 
+
+This tree will end up returning some kind of decision. 
+And from that each a system can take all the decision for each agent and update their entity tables, animations ect.
+Seperation the desicion tree and state handling seems like a good idea.
+
+
+Can be made more 'scriptable' by creating a dsl language that translate to rust code fx
+
+Start: if hp < 0.2 then SelfHeal else :Kill
+
+SelfHeal: Cast Heal(self)
+Kill: if has_target and target is alive then Attack else FindTarget
+
+Attack: Attack Target
+FindTarget: Target = GetNearest
+

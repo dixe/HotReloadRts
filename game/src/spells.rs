@@ -8,7 +8,7 @@ pub struct Spells {
 
     pub radius: Vec::<f32>,
     pub pos: Vec::<V3>,
-    pub duration_sec: Vec::<f32>,
+    pub seconds_left: Vec::<f32>,
 
     /*
 tick_interval: Vec::<f32>,
@@ -26,9 +26,27 @@ impl Spells {
 
     pub fn cast_spell(&mut self, cs: CastSpell) {
         self.radius.push(cs.r);
-        self.duration_sec.push(cs.dur_sec);
+        self.seconds_left.push(cs.dur_sec);
         self.pos.push(cs.pos);
 
+    }
+
+    pub fn remove_ended_spells(&mut self) {
+        let mut count = self.radius.len();
+        let mut i = 0;
+
+        while i < count {
+            if self.seconds_left[i] <= 0.0 {
+                self.radius.swap_remove(i);
+                self.pos.swap_remove(i);
+                self.seconds_left.swap_remove(i);
+                count -= 1;
+            }
+            else {
+                // only increment i when we pass a spell that is still active
+                i += 1;
+            }
+        }
     }
 }
 
@@ -39,7 +57,6 @@ pub type SpellFn = fn (SpellInfo, &mut state::State);
 //TODO: maybe take only entities from state and dt, also return a result instead of taking a mutable
 pub fn heal_tick(si: SpellInfo, state: &mut state::State)  {
 
-
     let hps = 1.0;
     // find
     for i in 0..state.entities.positions.len() {
@@ -49,11 +66,9 @@ pub fn heal_tick(si: SpellInfo, state: &mut state::State)  {
             let id =  state.entities.entities[i];
             if let Some(dmg) = state.entities.damage.get_mut(&id) {
                 dmg.health = f32::min(1.0, dmg.health + hps * state.dt);
-
             }
         }
     }
-
 }
 
 

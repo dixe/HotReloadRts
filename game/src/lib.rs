@@ -14,3 +14,5 @@ mod reload;
 pub mod entity_system;
 
 pub mod math;
+
+pub mod behaviour_tree;

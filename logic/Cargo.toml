@@ -14,3 +14,8 @@ rand = "0.8.5"
 [lib]
 name = "logic"
 crate-type = ['rlib', 'dylib']
+
+
+[profile.release]
+debug = 1
+incremental = true

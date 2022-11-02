@@ -40,6 +40,8 @@ Maybe impl as a spell that affect an area, so units in that area are healed?
 
 # Spell System
 * [x] spell duration
+* [ ] spell tick
+* [ ] cooldown
 
 
 

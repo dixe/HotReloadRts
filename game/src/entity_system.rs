@@ -1,20 +1,24 @@
 use nalgebra as na;
 use nohash_hasher::IntMap;
 use crate::math::*;
+use crate::spells::SpellId;
 
 
 pub type EntityId = usize;
 pub type EntityIndex = usize;
+pub type Team = u32;
 
 pub type MoveTargets = IntMap<EntityId, V3>;
 
 pub type DamageMap = IntMap<EntityId, EntityDamage>;
 
+pub type CoolDownMap = std::collections::HashMap<(EntityId, SpellId), CoolDown>;
+
 #[derive(Debug, Default, Clone)]
 pub struct Entities {
 
     next_id: usize,
-    pub entities: Vec::<EntityId>,
+    pub ids: Vec::<EntityId>,
 
     pub id_to_index: IntMap<EntityId, EntityIndex>,
 
@@ -22,10 +26,16 @@ pub struct Entities {
     pub positions: Vec::<V3>,
     pub velocities: Vec::<V3>,
     pub z_rotations: Vec::<Rotation2>,
+    pub team: Vec::<Team>,
 
+    pub targets: IntMap<EntityId, EntityId>,
     pub move_targets: MoveTargets,
 
     pub damage: DamageMap,
+
+    pub cooldown: CoolDownMap,
+
+
 }
 
 
@@ -35,14 +45,20 @@ pub struct EntityDamage {
 }
 
 
+#[derive(Debug, Default, Clone)]
+pub struct CoolDown {
+    pub secs: f32,
+}
+
 impl Entities {
-    pub fn add_entity(&mut self, pos: V3) -> EntityId {
+    pub fn add_entity(&mut self, pos: V3, team: Team) -> EntityId {
         let id = self.get_id();
 
-        self.entities.push(id);
+        self.ids.push(id);
         self.positions.push(pos);
         self.velocities.push(na::Vector3::new(0.0, 0.0, 0.0));
         self.z_rotations.push(Default::default());
+        self.team.push(team);
 
         self.id_to_index.insert(id, self.positions.len() - 1);
 
@@ -61,13 +77,14 @@ impl Entities {
 
         if let Some(index) = self.id_to_index.remove(id) {
             // swap index so after swap delete everything is still cool
-            if let Some(&last_id) = self.entities.last() {
+            if let Some(&last_id) = self.ids.last() {
                 self.id_to_index.insert(last_id, index);
             }
-            self.entities.swap_remove(index);
+            self.ids.swap_remove(index);
             self.positions.swap_remove(index);
             self.z_rotations.swap_remove(index);
             self.velocities.swap_remove(index);
+            self.team.swap_remove(index);
 
         };
 

@@ -18,7 +18,7 @@ fn main() {
     let mut names = HashSet::new();
 
     for path in paths {
-        let mut name = path.unwrap().file_name().into_string().unwrap();
+        let name = path.unwrap().file_name().into_string().unwrap();
 
         if name.ends_with(".vert") {
             names.insert(name.replace(".vert", ""));
@@ -27,14 +27,14 @@ fn main() {
 
 
     File::create(&Path::new(&out_dir).join("shaders_gen.rs")).unwrap();
-    fs::write(&Path::new(&out_dir).join("shaders_gen.rs"), shaders_file(names));
+    fs::write(&Path::new(&out_dir).join("shaders_gen.rs"), shaders_file(names)).unwrap();
 }
 
 
 fn shaders_file(names: HashSet::<String>) -> String {
 
     let mut code =  "
-pub struct Shaders {\n".to_string();;
+pub struct Shaders {\n".to_string();
 
     for name in &names {
         code += &format!("    pub {name}: shader::BaseShader,\n", name = name);

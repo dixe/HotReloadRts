@@ -5,11 +5,11 @@ use nalgebra as na;
 use rand::Rng;
 use game::entity_system::*;
 use game::spells;
+use game::damage;
 
 
-mod damage;
 mod spell_logic;
-
+mod ai;
 
 pub type V3 = na::Vector3::<f32>;
 pub type Rot = Rotation2;//na::geometry::Rotation3::<f32>;
@@ -19,12 +19,15 @@ pub extern "Rust" fn step(state: &mut game::State) {
 
     let dt = state.dt;
 
-
     update_selected_command(state);
 
-    damage::damage(state);
+    //damage::damage(state);
+
+    // TODO: Update targets, remove where target is dead
 
     spell_logic::update_spells(state);
+
+    ai::run_ais(state);
 
     run_step(state);
 
@@ -46,26 +49,24 @@ pub extern "Rust" fn step(state: &mut game::State) {
 fn update_selected_command(state: &mut game::State) {
     if state.selected.len() > 0 && state.command != Command::Empty {
         // apply state.command to every item in selection
-        'update: for &select_index in &state.selected {
+        'update: for &select_id in &state.selected {
             // for now everything is units, so just do the command for all
-
             match state.command {
                 Command::DefaultRightClick(target) => {
                     match state.action {
                         Action::Move => {
-                            update_move_target(&mut state.entities.move_targets, target, select_index);
+                            update_move_target(&mut state.entities.move_targets, target, select_id);
                         },
                         Action::Spell => {
 
                             match target {
-                                 Target::Position(x,y) => {
-                                     spells::cast_heal(V3::new(x, y, 0.0), &mut state.spells);
+                                Target::Position(x,y) => {
+                                    state.active_spells.cast_spell(spells::cast_heal(V3::new(x, y, 0.0), 1));
                                  },
                                 _ => {
                                     todo!();
                                 }
                             }
-
                             state.action = Action::Move;
                             break 'update;
                         }
@@ -73,8 +74,10 @@ fn update_selected_command(state: &mut game::State) {
                 },
                 Command::Stop => {
                     // remove target
-                    let _ = state.entities.move_targets.remove(&select_index);
-                    state.entities.velocities[select_index] = V3::zeros();
+                    let _ = state.entities.move_targets.remove(&select_id);
+                    if let Some(&id) = state.entities.id_to_index.get(&select_id) {
+                        state.entities.velocities[id] = V3::zeros();
+                    }
                 }
                 _ => {
                     todo!();
@@ -85,7 +88,7 @@ fn update_selected_command(state: &mut game::State) {
 }
 
 
-fn update_move_target(move_targets: &mut MoveTargets, target: Target, index: EntityIndex) {
+fn update_move_target(move_targets: &mut MoveTargets, target: Target, index: EntityId) {
     match target {
         Target::Position(x,y) => {
             move_targets.insert(index, V3::new(x, y, 0.0));
@@ -107,7 +110,9 @@ fn run_step(state: &mut game::State) {
     // nothing will trigger spread
 
     for i in 0..count {
-        if let Some(target) = state.entities.move_targets.get(&i) {
+        let id = state.entities.ids[i];
+
+        if let Some(target) = state.entities.move_targets.get(&id) {
 
             let move_res = move_to(state.entities.positions[i], *target, Rotation2 { radians: state.entities.z_rotations[i].radians });
 
@@ -131,7 +136,7 @@ fn run_step(state: &mut game::State) {
                 }
             }
         } else {
-            state.entities.velocities[i] = spread(i, &state.entities.positions, dt);
+            //state.entities.velocities[i] = spread(i, &state.entities.positions, dt);
         }
 
     }
@@ -141,7 +146,7 @@ fn run_step(state: &mut game::State) {
 
 fn spread(i: usize, positions: &[V3], dt: f32) -> V3 {
     // standing and waiting
-    // if anyone else is near, move away
+    // if anyone else is near, move away, only for same team
 
     let mut rng = rand::thread_rng();
 
@@ -208,7 +213,7 @@ struct MoveToTarget {
 
 fn move_to(pos: V3, target: V3, z_rot: Rot) -> MoveUpdate {
 
-    let mut diff = target - pos;
+    let diff = target - pos;
 
     let dist = diff.magnitude();
 

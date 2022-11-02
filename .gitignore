@@ -22,3 +22,5 @@ DynamicLibLoadExample*
 .vs/*
 
 **/flamegraph*
+
+*.svg

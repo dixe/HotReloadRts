@@ -1,6 +1,8 @@
 pub mod game;
 mod state;
 
+pub mod damage;
+
 pub use self::state::*;
 
 

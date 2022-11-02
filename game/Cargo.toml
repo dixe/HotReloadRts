@@ -11,6 +11,7 @@ libloading = "0.7"
 nalgebra = "0.31.1"
 failure = "0.1"
 nohash-hasher = "0.2.0"
+rand = "0.8.5"
 
 [features]
 no_reload = []

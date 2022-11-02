@@ -161,6 +161,9 @@ fn handle_select_box(event: &sdl2::event::Event, game: &mut Game) {
                     let count = game.state.entities.positions.len();
 
                     for i in 0..count {
+                        if game.state.entities.team[i] != 1 {
+                            continue;
+                        }
                         let sp = game.camera.world_pos_to_screen(game.state.entities.positions[i]);
 
                         let screen_pos_i = ScreenPos {x: sp.x as i32, y: sp.y as i32};

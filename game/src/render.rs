@@ -134,7 +134,12 @@ fn render_entities(gl: &gl::Gl, game: &Game) {
 
         model_mat = model_mat.append_translation(&game.state.entities.positions[i]);
 
-        let mut color = vector![1.0, 0.1, 0.0];
+        let mut color = match game.state.entities.team[i] {
+            1 => vector![1.0, 0.0, 0.0],
+            2 => vector![0.0, 0.0, 1.0],
+            _ => vector![1.0, 1.0, 1.0]
+        };
+
 
         if game.state.selected.contains(&i) {
             color.z = 1.0;
@@ -181,8 +186,6 @@ fn render_entities(gl: &gl::Gl, game: &Game) {
 
     shadow_map_render(gl, &game.render_data.shadow_map, light_pos, &render_objs);
 
-    let light_space_mat = game.render_data.shadow_map.light_space_mat(light_pos);
-
      // bind the shadow map texture to sampler 1
     unsafe {
         gl.ActiveTexture(gl::TEXTURE0);
@@ -192,9 +195,9 @@ fn render_entities(gl: &gl::Gl, game: &Game) {
 
     // SPELLS
     let mut z_offset = 0.001;
-    for i in 0..game.state.spells.pos.len() {
-        let pos = game.state.spells.pos[i];
-        let r = game.state.spells.radius[i];
+    for i in 0..game.state.active_spells.pos.len() {
+        let pos = game.state.active_spells.pos[i];
+        let r = game.state.active_spells.radius[i];
         let mut model_mat = na::Matrix4::identity();
         model_mat = model_mat.prepend_nonuniform_scaling(&vector![r * 2.0, r * 2.0, 1.0]);
         model_mat = model_mat.append_translation(&(pos + vector![0.0, 0.0, z_offset]));
@@ -256,7 +259,7 @@ fn render_select_box(gl: &gl::Gl, game: &Game) {
 fn render_health_bars(gl: &gl::Gl, game: &Game) {
 
     // HEALTH BARS
-    for entity_id in &game.state.entities.entities {
+    for entity_id in &game.state.entities.ids {
 
         let idx = game.state.entities.id_to_index.get(entity_id).unwrap();
         let screen_pos = game.camera.world_pos_to_screen(game.state.entities.positions[*idx]);

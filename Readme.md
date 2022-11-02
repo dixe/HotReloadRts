@@ -43,6 +43,23 @@ Maybe impl as a spell that affect an area, so units in that area are healed?
 * [ ] spell tick
 * [ ] cooldown
 
+# Animation
+Import sekeletal animation
+When an animation is playing think about how we make sure they are played to end?
+Maybe have a cast table/animaiton, that has info about when the cast/animation is done, and if it is Cancelable, ect.
+Only call behaviour tree when nothing is active in this table. That way we automaticly fully play animations.
+And the animation state will be driven by the behaviour/tables. And not a 'set' tree.
+
+
+
+# Entity files
+Have some files that describes entitties.
+Can be different
+* Spells: The animation, spell info: function, cooldown, 
+* Entity: Stats and spells. This will also indirectly has info on which animations that will be cast, since they are contained in spells.
+
+Can we create checks, for entity skeleton, so we know they match. Fx if a boss has a different skeleton then a player char, can we ensure that the skeleton is different. Fx have animation speficy the skeleton, by id? And at load time we can check that the model and all spell->animations match.
+
 
 
 # Ai system

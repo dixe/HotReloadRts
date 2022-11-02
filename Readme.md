@@ -44,7 +44,10 @@ Maybe impl as a spell that affect an area, so units in that area are healed?
 # Animation
 Import sekeletal animation
 When an animation is playing think about how we make sure they are played to end?
-Maybe have a cast table, that has info about when the cast is done, and if it is Cancelable, ect.
+Maybe have a cast table/animaiton, that has info about when the cast/animation is done, and if it is Cancelable, ect.
+Only call behaviour tree when nothing is active in this table. That way we automaticly fully play animations.
+And the animation state will be driven by the behaviour/tables. And not a 'set' tree.
+
 
 
 # Entity files

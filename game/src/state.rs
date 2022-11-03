@@ -3,7 +3,7 @@ use nalgebra::vector;
 use crate::game;
 use crate::commands::{ Command, Action };
 use crate::entity_system::*;
-use crate::spells::{self, ActiveSpells, AllSpells};
+use crate::spells::{self, ActiveAoeSpell, AllSpells};
 use crate::math::*;
 use crate::behaviour_tree::{Tree, TreeBuilder, heal_then_kill};
 
@@ -18,7 +18,7 @@ pub struct State {
     pub mouse_pos: na::Vector2::<f32>,
     pub entities: Entities,
 
-    pub active_spells: ActiveSpells,
+    pub active_aoe_spells: Vec::<ActiveAoeSpell>,
 
     pub all_spells: AllSpells,
     pub behaviour_tree : Tree,
@@ -37,7 +37,7 @@ impl State {
     pub fn new() -> Self {
         Self {
             entities: Default::default(),
-            active_spells: Default::default(),
+            active_aoe_spells: vec![],
             all_spells: spells::create_all_spells(),
 
             light: vector![0.0, -30.0, 30.0],

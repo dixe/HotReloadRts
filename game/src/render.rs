@@ -195,9 +195,9 @@ fn render_entities(gl: &gl::Gl, game: &Game) {
 
     // SPELLS
     let mut z_offset = 0.001;
-    for i in 0..game.state.active_spells.pos.len() {
-        let pos = game.state.active_spells.pos[i];
-        let r = game.state.active_spells.radius[i];
+    for i in 0..game.state.active_aoe_spells.len() {
+        let pos = game.state.active_aoe_spells[i].pos;
+        let r = game.state.active_aoe_spells[i].radius;
         let mut model_mat = na::Matrix4::identity();
         model_mat = model_mat.prepend_nonuniform_scaling(&vector![r * 2.0, r * 2.0, 1.0]);
         model_mat = model_mat.append_translation(&(pos + vector![0.0, 0.0, z_offset]));

@@ -7,8 +7,6 @@ use game::entity_system::*;
 use game::spells;
 use game::damage;
 
-
-mod spell_logic;
 mod ai;
 
 pub type V3 = na::Vector3::<f32>;
@@ -25,7 +23,7 @@ pub extern "Rust" fn step(state: &mut game::State) {
 
     // TODO: Update targets, remove where target is dead
 
-    spell_logic::update_spells(state);
+    spells::update_spells(state);
 
     ai::run_ais(state);
 
@@ -61,7 +59,11 @@ fn update_selected_command(state: &mut game::State) {
 
                             match target {
                                 Target::Position(x,y) => {
-                                    state.active_spells.cast_spell(spells::cast_heal(V3::new(x, y, 0.0), 1));
+                                    // TODO: maybe handle on cooldown
+                                    let spell_id = 1;
+
+                                    let cast_res = spells::cast_aoe_spell(V3::new(x, y, 0.0), select_id, spell_id, state);
+
                                  },
                                 _ => {
                                     todo!();

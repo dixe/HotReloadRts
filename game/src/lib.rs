@@ -18,3 +18,5 @@ pub mod entity_system;
 pub mod math;
 
 pub mod behaviour_tree;
+
+pub mod types;

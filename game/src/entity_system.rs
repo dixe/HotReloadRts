@@ -2,7 +2,7 @@ use nalgebra as na;
 use nohash_hasher::IntMap;
 use crate::math::*;
 use crate::spells::SpellId;
-
+use crate::types::*;
 
 pub type EntityId = usize;
 pub type EntityIndex = usize;
@@ -12,7 +12,7 @@ pub type MoveTargets = IntMap<EntityId, V3>;
 
 pub type DamageMap = IntMap<EntityId, EntityDamage>;
 
-pub type CoolDownMap = std::collections::HashMap<(EntityId, SpellId), CoolDown>;
+pub type CoolDownMap = std::collections::HashMap<(EntityId, SpellId), Sec>;
 
 #[derive(Debug, Default, Clone)]
 pub struct Entities {
@@ -91,7 +91,7 @@ impl Entities {
         self.move_targets.remove(id);
         self.damage.remove(id);
         self.id_to_index.remove(id);
-
-
     }
+
+
 }

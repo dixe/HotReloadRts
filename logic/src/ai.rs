@@ -45,16 +45,10 @@ pub fn run_ais(state: &mut game::State) {
                 let idx = *state.entities.id_to_index.get(&id).unwrap();
                 state.entities.velocities[idx] = V3::zeros();
 
-                // TODO: Get id/index from entity base attack or something. Maybe from the Decision:Attack
-                let spell = &state.all_spells.spells[0];
+                let spell_id = 0;
 
-                // TODO: Call a centrelized cast function, that can check cooldown ect.
-                match spell {
-                    spells::Spell::Instant(is) => {
-                        (is.call_fn)(*id, state);
-                    },
-                    _ => todo!()
-                }
+                spells::cast_spell(*id, spell_id, state);
+
             },
             _ => {}
         }

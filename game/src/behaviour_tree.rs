@@ -1,6 +1,5 @@
 use crate::state;
 use crate::entity_system::EntityId;
-use crate::math::V3;
 use std::fmt;
 
 pub struct BehaviourTrees {
@@ -173,15 +172,15 @@ pub fn kill(id: EntityId, state :&state::State) -> Decision {
 }
 
 
-fn find_target(id: EntityId, state :&state::State) -> Decision {
-    let mut target_id = 0;
+fn find_target(_id: EntityId, state :&state::State) -> Decision {
+    let mut target = None;
     for i in 0..state.entities.positions.len() {
         if state.entities.team[i] == 1 {
-            target_id = state.entities.ids[i];
+            target = Some(state.entities.ids[i]);
         }
     }
 
-    if target_id != 0 {
+    if let Some(target_id) = target {
         return Decision::Target(target_id);
     }
 

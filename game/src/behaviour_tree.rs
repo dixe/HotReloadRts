@@ -4,7 +4,6 @@ use std::fmt;
 
 pub struct BehaviourTrees {
 
-
 }
 
 #[derive(Debug)]

@@ -5,7 +5,9 @@ use gl_lib::{gl, na, objects::{gltf_mesh, square}, camera};
 use crate::render;
 use crate::handle_inputs;
 use crate::commands::*;
-use crate::reload::*;
+use crate::reload;
+use crate::loading;
+
 
 //type ControllerType = camera::free_camera::Controller;
 type ControllerType = camera::rts_camera::Controller;
@@ -16,7 +18,7 @@ pub struct Game {
 
     //SIMLULATION/LOGIC
     pub state: State,
-    pub logic: Logic,
+    pub logic: reload::Logic,
 
     // ALL RENDER DATA, LIKE SHADERS MESHES SHADOW MAP ECT.
     pub render_data: render::RenderData,
@@ -102,7 +104,7 @@ impl SelectBox {
 pub extern "Rust" fn initialize_state(gl: &gl::Gl) -> Box<dyn shared::SharedState> {
 
     let state = init();
-    let logic = load();
+    let logic = reload::load();
 
 
     let mut camera = camera::Camera::new(1200.0, 700.0);
@@ -114,12 +116,21 @@ pub extern "Rust" fn initialize_state(gl: &gl::Gl) -> Box<dyn shared::SharedStat
     camera_controller.sens =  0.7;
     camera_controller.speed = 10.0;
 
+    let base_path: std::path::PathBuf = "E:/repos/HotReloadRts/assets".to_string().into();
+
+    let all_assets = loading::load_all_assets(base_path).unwrap();
+    let mut render_data = render::RenderData::new(gl);
+
+    loading::populate_render_data(gl, &mut render_data, &all_assets.models);
+
+
+
     Box::new(Game {
         gl: gl.clone(),
         state,
         camera,
         camera_controller,
-        render_data: render::RenderData::new(gl),
+        render_data,
         logic,
 
         tmp_buffer: vec![],
@@ -142,16 +153,12 @@ pub fn reload_assets(game: &mut Game) {
 
     game.render_data.shaders.reload(&game.gl, &base_path);
 
-
-    // Kind of a hack, since not recreating this make binding the vbo and sub data fail with gl 1282
-    game.render_data.square = square::Square::new(&game.gl);
-
     let hashmap = std::collections::HashMap::new();
     match gltf_mesh::meshes_from_gltf(&"E:/repos/HotReloadRts/assets/boid.glb", &hashmap) {
         Ok(boid_gltf) => {
             match boid_gltf.get_mesh(&game.gl, "Boid") {
                 Some(boid) => {
-                    game.render_data.boid = boid;
+                    game.render_data.replace_mesh("Boid", boid);
                     println!("Reloaded boid");
                 },
                 None => {
@@ -164,6 +171,6 @@ pub fn reload_assets(game: &mut Game) {
         }
     }
 
-    game.logic = load();
+    game.logic = reload::load();
 
 }

@@ -2,16 +2,20 @@ extern crate shared;
 use nalgebra::vector;
 use gl_lib::{gl, na, objects::{plane, mesh, shadow_map, texture_quad, square, gltf_mesh}, shader::{self, Shader}};
 use crate::game::*;
+use std::collections::HashMap;
+
+pub type MeshIndex = usize;
 
 include!(concat!(env!("OUT_DIR"), "/shaders_gen.rs"));
 
 
 pub struct RenderData {
+    // MESHES LOADED FROM FILES
+    meshes: Vec::<mesh::Mesh>,
+    mesh_name_to_index: HashMap::<String, MeshIndex>,
 
-    // MESHESH
-    pub boid: mesh::Mesh,
+    // STATIC MESHES AND MODELS
     pub plane: mesh::Mesh,
-
     pub square: square::Square,
 
     //SHADOW MAP STUFF
@@ -21,6 +25,7 @@ pub struct RenderData {
     // SHADERS
     pub shaders: Shaders,
 }
+
 
 impl RenderData {
 
@@ -34,17 +39,49 @@ impl RenderData {
         let boid = boids_gltf.get_mesh(gl, "Boid").unwrap();
 
         let plane = plane::Plane::new(gl);
+        let mut mesh_name_to_index : HashMap::<String, usize> = Default::default();
 
+        mesh_name_to_index.insert("Boid".to_string(), 0);
 
         Self {
+            meshes: vec![boid],
+            mesh_name_to_index,
             plane,
-            boid,
             square: square::Square::new(gl),
             shadow_map: shadow_map::ShadowMap::new(&gl),
             tex_quad: texture_quad::TextureQuad::new(&gl),
             shaders: Shaders::new(gl, &base_path),
         }
     }
+
+
+    pub fn get_mesh_index(&self, name: &str) -> MeshIndex {
+        *self.mesh_name_to_index.get(name).unwrap()
+    }
+
+    /// Add or replace a mesh, return the mesh_index
+    pub fn set_mesh(&mut self, name: &str, mesh: mesh::Mesh) -> MeshIndex {
+        match self.mesh_name_to_index.get(name) {
+            Some(&index) => {
+                self.meshes[index] = mesh;
+                index
+            },
+            None => {
+                let index = self.meshes.len();
+                self.meshes.push(mesh);
+                self.mesh_name_to_index.insert(name.to_string(), index);
+                index
+            }
+        }
+    }
+
+
+    /// Replace a mesh, panic if mesh does not exists
+    pub fn replace_mesh(&mut self, name: &str, mesh: mesh::Mesh) {
+        let index = *self.mesh_name_to_index.get(name).unwrap();
+        self.meshes[index] = mesh;
+    }
+
 }
 
 
@@ -134,6 +171,7 @@ fn render_entities(gl: &gl::Gl, game: &Game) {
 
         model_mat = model_mat.append_translation(&game.state.entities.positions[i]);
 
+
         let mut color = match game.state.entities.team[i] {
             1 => vector![1.0, 0.0, 0.0],
             2 => vector![0.0, 0.0, 1.0],
@@ -145,10 +183,11 @@ fn render_entities(gl: &gl::Gl, game: &Game) {
             color.z = 1.0;
         }
 
+        let mesh_index = game.state.entities.mesh_index[i];
         render_objs.push(RenderMesh {
             shader: &game.render_data.shaders.mesh_shader,
             model_mat,
-            mesh: &game.render_data.boid,
+            mesh: &game.render_data.meshes[mesh_index],
             color: color
         });
     }

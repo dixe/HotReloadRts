@@ -118,7 +118,6 @@ pub fn aoe_heal_tick(si: ActiveAoeSpell, state: &mut state::State)  {    let hps
 
 pub fn instant_attack(id: EntityId, state: &mut state::State) {
     if let Some(target_id) = state.entities.targets.get(&id) {
-        println!("Instant_attack {} -> {}", id, target_id);
-        apply_damage(*target_id, 0.2, &mut state.entities.damage);
+        apply_damage(*target_id, 0.02, &mut state.entities.damage);
     }
 }

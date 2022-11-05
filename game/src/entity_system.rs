@@ -28,6 +28,7 @@ pub struct Entities {
     pub z_rotations: Vec::<Rotation2>,
     pub team: Vec::<Team>,
 
+    pub mesh_index: Vec::<usize>,
     pub targets: IntMap<EntityId, EntityId>,
     pub move_targets: MoveTargets,
 
@@ -51,7 +52,7 @@ pub struct CoolDown {
 }
 
 impl Entities {
-    pub fn add_entity(&mut self, pos: V3, team: Team) -> EntityId {
+    pub fn add_entity(&mut self, pos: V3, team: Team, mesh_index: usize) -> EntityId {
         let id = self.get_id();
 
         self.ids.push(id);
@@ -59,6 +60,7 @@ impl Entities {
         self.velocities.push(na::Vector3::new(0.0, 0.0, 0.0));
         self.z_rotations.push(Default::default());
         self.team.push(team);
+        self.mesh_index.push(mesh_index);
 
         self.id_to_index.insert(id, self.positions.len() - 1);
 
@@ -85,7 +87,7 @@ impl Entities {
             self.z_rotations.swap_remove(index);
             self.velocities.swap_remove(index);
             self.team.swap_remove(index);
-
+            self.mesh_index.swap_remove(index);
         };
 
         self.move_targets.remove(id);

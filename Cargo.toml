@@ -6,6 +6,3 @@ members = [
    "logic"
 
 ]
-
-[profile.release]
-debug = true

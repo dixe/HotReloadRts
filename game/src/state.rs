@@ -68,7 +68,7 @@ pub fn init() -> State {
 
     for i in 1..5 {
         for j in 1..5 {
-            state.entities.add_entity(vector![i as f32 * 1.0, j as f32 * 1.0, 0.0], i % 3);
+            state.entities.add_entity(vector![i as f32 * 1.0, j as f32 * 1.0, 0.0], i % 3, 0);
         }
     }
 

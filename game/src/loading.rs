@@ -1,7 +1,7 @@
 use std::fs;
 use std::path::PathBuf;
 use std::io::{self, BufRead};
-use gl_lib::{gl, na, objects::{plane, mesh, shadow_map, texture_quad, square, gltf_mesh}, shader::{self, Shader}};
+use gl_lib::{gl, na, objects::{plane, skeleton, mesh, shadow_map, texture_quad, square, gltf_mesh}, shader::{self, Shader}};
 use std::collections::HashMap;
 use crate::render;
 
@@ -52,8 +52,20 @@ fn load_all_glb(path: PathBuf) -> ModelsAssets {
         if let Ok(entry) = entry {
             let file_path: String = entry.path().into_os_string().into_string().unwrap();
             if file_path.ends_with(".glb") {
-                let hashmap = std::collections::HashMap::new();
-                match gltf_mesh::meshes_from_gltf(&file_path, &hashmap) {
+
+
+                let (skeleton, index) = match skeleton::Skeleton::from_gltf(&file_path) {
+                    Ok(ok) => ok,
+                    Err(msg) => {
+                        println!("{:?}",msg);
+                        let s = skeleton::Skeleton { name: "empty".to_string(), joints: vec![]};
+                        let i = HashMap::default();
+
+                        (s,i)
+                    }
+                };
+
+                match gltf_mesh::meshes_from_gltf(&file_path, &index) {
                     Ok(meshes_gltf) => {
 
                         let index = res.meshes.len();
@@ -72,6 +84,7 @@ fn load_all_glb(path: PathBuf) -> ModelsAssets {
         }
     }
 
+    println!("{:?}", res. names);
     res
 }
 
@@ -122,6 +135,6 @@ pub fn populate_render_data(gl: &gl::Gl, rd: &mut render::RenderData, models: &M
         let gltf_mesh = &models.meshes[index];
         let mesh = gltf_mesh.get_mesh(gl, name).unwrap();
 
-        rd.replace_mesh(name, mesh);
+        rd.set_mesh(name, mesh);
     }
 }

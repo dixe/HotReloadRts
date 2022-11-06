@@ -6,8 +6,10 @@ use crate::entity_system::*;
 use crate::spells::{self, ActiveAoeSpell, AllSpells};
 use crate::math::*;
 use crate::behaviour_tree::{Tree, TreeBuilder, heal_then_kill};
+use crate::render;
 
-// All into regarding the simulation
+
+// All info regarding the simulation
 #[derive(Debug)]
 pub struct State {
 
@@ -61,16 +63,21 @@ impl State {
 }
 
 
+pub fn populate(state: &mut State, render_data: &render::RenderData) {
+
+    let boid_index = render_data.get_mesh_index("Boid");
+    for i in 1..5 {
+        for j in 1..5 {
+            state.entities.add_entity(vector![i as f32 * 1.0, j as f32 * 1.0, 0.0], i % 3, boid_index);
+        }
+    }
+}
+
+
 
 pub fn init() -> State {
 
     let mut state = State::new();
-
-    for i in 1..5 {
-        for j in 1..5 {
-            state.entities.add_entity(vector![i as f32 * 1.0, j as f32 * 1.0, 0.0], i % 3, 0);
-        }
-    }
 
     state.behaviour_tree = heal_then_kill();
 

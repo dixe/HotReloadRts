@@ -1,6 +1,6 @@
 extern crate shared;
 use libloading;
-use crate::state::*;
+use crate::state;
 use gl_lib::{gl, na, objects::{gltf_mesh, square}, camera};
 use crate::render;
 use crate::handle_inputs;
@@ -17,7 +17,7 @@ pub struct Game {
     pub gl: gl::Gl,
 
     //SIMLULATION/LOGIC
-    pub state: State,
+    pub state: state::State,
     pub logic: reload::Logic,
 
     // ALL RENDER DATA, LIKE SHADERS MESHES SHADOW MAP ECT.
@@ -103,7 +103,7 @@ impl SelectBox {
 #[no_mangle]
 pub extern "Rust" fn initialize_state(gl: &gl::Gl) -> Box<dyn shared::SharedState> {
 
-    let state = init();
+    let mut state = state::init();
     let logic = reload::load();
 
 
@@ -118,11 +118,15 @@ pub extern "Rust" fn initialize_state(gl: &gl::Gl) -> Box<dyn shared::SharedStat
 
     let base_path: std::path::PathBuf = "E:/repos/HotReloadRts/assets".to_string().into();
 
+
+    let mut render_data = render::RenderData::new(gl, &base_path);
     let all_assets = loading::load_all_assets(base_path).unwrap();
-    let mut render_data = render::RenderData::new(gl);
 
     loading::populate_render_data(gl, &mut render_data, &all_assets.models);
 
+
+
+    state::populate(&mut state, &render_data);
 
 
     Box::new(Game {
@@ -141,7 +145,8 @@ pub extern "Rust" fn initialize_state(gl: &gl::Gl) -> Box<dyn shared::SharedStat
 
 
 pub fn reset(game: &mut Game) {
-    game.state = init();
+    game.state = state::init();
+    state::populate(&mut game.state, &game.render_data);
 }
 
 

@@ -29,22 +29,14 @@ pub struct RenderData {
 
 impl RenderData {
 
-    pub fn new(gl: &gl::Gl) -> Self {
-        let base_path: std::path::PathBuf = "E:/repos/HotReloadRts/assets".to_string().into();
 
-        let hashmap = std::collections::HashMap::new();
-
-        let boids_gltf = gltf_mesh::meshes_from_gltf(&"E:/repos/HotReloadRts/assets/boid.glb", &hashmap).unwrap();
-
-        let boid = boids_gltf.get_mesh(gl, "Boid").unwrap();
+    pub fn new(gl: &gl::Gl, base_path: &std::path::PathBuf) -> Self {
 
         let plane = plane::Plane::new(gl);
+
         let mut mesh_name_to_index : HashMap::<String, usize> = Default::default();
-
-        mesh_name_to_index.insert("Boid".to_string(), 0);
-
         Self {
-            meshes: vec![boid],
+            meshes: vec![],
             mesh_name_to_index,
             plane,
             square: square::Square::new(gl),
@@ -61,7 +53,7 @@ impl RenderData {
 
     /// Add or replace a mesh, return the mesh_index
     pub fn set_mesh(&mut self, name: &str, mesh: mesh::Mesh) -> MeshIndex {
-        match self.mesh_name_to_index.get(name) {
+        let index = match self.mesh_name_to_index.get(name) {
             Some(&index) => {
                 self.meshes[index] = mesh;
                 index
@@ -72,7 +64,10 @@ impl RenderData {
                 self.mesh_name_to_index.insert(name.to_string(), index);
                 index
             }
-        }
+        };
+
+        println!("Set {:?} to index={}", name, index);
+        index
     }
 
 

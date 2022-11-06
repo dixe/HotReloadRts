@@ -99,7 +99,6 @@ impl TreeBuilder {
         self.nodes.push(empty_leaf());
         self.nodes.push(empty_leaf());
 
-        let child_index = self.nodes.len();
         children_start
     }
 
@@ -210,7 +209,7 @@ pub fn heal_then_kill() -> Tree {
     builder.add_leaf(cast_heal, child_index);
 
     // leaf for right child. i.e the kill
-    let child_index = builder.add_leaf(kill, child_index + 1);
+    let _ = builder.add_leaf(kill, child_index + 1);
 
     builder.build()
 }

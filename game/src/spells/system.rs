@@ -2,7 +2,6 @@ use crate::state;
 use crate::spells;
 use crate::entity_system::*;
 use crate::math::V3;
-use crate::types::*;
 
 
 pub fn update_spells(state: &mut state::State) {
@@ -17,13 +16,13 @@ pub fn update_spells(state: &mut state::State) {
     }
 
     // Decrement all cooldowns
-    for (key, secs) in &mut state.entities.cooldown {
+    for (_key, secs) in &mut state.entities.cooldown {
         *secs -= state.dt;
     }
 
 
     // remove cooldowns that are not on cooldown any more
-    state.entities.cooldown.retain(|k,v| {
+    state.entities.cooldown.retain(|_,v| {
         *v >= 0.0
     });
 
@@ -61,7 +60,7 @@ pub fn cast_spell(caster_id: EntityId, spell_id: spells::SpellId, state: &mut st
         _ => {
             return SpellCastResult::Failed;
         }
-    }    SpellCastResult::Cast
+    }
 }
 
 

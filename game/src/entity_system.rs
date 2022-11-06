@@ -3,6 +3,8 @@ use nohash_hasher::IntMap;
 use crate::math::*;
 use crate::spells::SpellId;
 use crate::types::*;
+use gl_lib::objects::skeleton;
+
 
 pub type EntityId = usize;
 pub type EntityIndex = usize;
@@ -33,6 +35,8 @@ pub struct Entities {
     pub move_targets: MoveTargets,
 
     pub damage: DamageMap,
+
+    pub skeletons: IntMap<EntityId, skeleton::Skeleton>,
 
     pub cooldown: CoolDownMap,
 

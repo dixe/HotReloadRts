@@ -1,7 +1,7 @@
 use std::fs;
 use std::path::PathBuf;
 use std::io::{self, BufRead};
-use gl_lib::{gl, na, objects::{plane, skeleton, mesh, shadow_map, texture_quad, square, gltf_mesh}, shader::{self, Shader}};
+use gl_lib::{gl, objects::{ skeleton, gltf_mesh}};
 use std::collections::HashMap;
 use crate::render;
 
@@ -55,7 +55,7 @@ fn load_all_glb(path: PathBuf) -> ModelsAssets {
             if file_path.ends_with(".glb") {
 
 
-                let (skeleton, index) = match skeleton::Skeleton::from_gltf(&file_path) {
+                let (_skeleton, index) = match skeleton::Skeleton::from_gltf(&file_path) {
                     Ok(ok) => ok,
                     Err(msg) => {
                         println!("{:?}",msg);

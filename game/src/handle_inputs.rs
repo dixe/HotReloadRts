@@ -50,7 +50,7 @@ fn handle_keyboard(event: &sdl2::event::Event, game: &mut Game) {
 
 
     use sdl2::event::Event::*;
-    use sdl2::keyboard::Keycode::{self, * };
+    use sdl2::keyboard::Keycode::*;
 
     match event.clone() {
         KeyDown{keycode: Some(kc), .. } => {

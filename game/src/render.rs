@@ -1,6 +1,6 @@
 extern crate shared;
 use nalgebra::vector;
-use gl_lib::{gl, na, objects::{plane, mesh, shadow_map, texture_quad, square, gltf_mesh}, shader::{self, Shader}};
+use gl_lib::{gl, na, objects::{plane, mesh, shadow_map, texture_quad, square}, shader::{self, Shader}};
 use crate::game::*;
 use std::collections::HashMap;
 
@@ -34,7 +34,7 @@ impl RenderData {
 
         let plane = plane::Plane::new(gl);
 
-        let mut mesh_name_to_index : HashMap::<String, usize> = Default::default();
+        let mesh_name_to_index : HashMap::<String, usize> = Default::default();
         Self {
             meshes: vec![],
             mesh_name_to_index,

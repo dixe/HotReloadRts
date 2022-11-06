@@ -1,7 +1,6 @@
 extern crate shared;
-use libloading;
 use crate::state;
-use gl_lib::{gl, na, objects::{gltf_mesh, square}, camera};
+use gl_lib::{gl, na, camera};
 use crate::render;
 use crate::handle_inputs;
 use crate::commands::*;
@@ -161,8 +160,8 @@ pub fn reload_assets(game: &mut Game) {
 
     game.render_data.shaders.reload(&game.gl, &base_path);
 
-
     game.game_assets = loading::load_all_assets(base_path).unwrap();
+
 
     state::populate(&mut game.state, &game.game_assets.units, &game.render_data);
 

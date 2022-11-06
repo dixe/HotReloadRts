@@ -7,10 +7,11 @@ use crate::render;
 
 
 pub struct GameAssets {
-    pub units : Vec::<UnitAsset>,
+    pub units: HashMap::<String, UnitAsset>,
     pub models: ModelsAssets
 }
 
+#[derive(Debug)]
 pub struct UnitAsset {
     pub model_name: String
 }
@@ -89,14 +90,15 @@ fn load_all_glb(path: PathBuf) -> ModelsAssets {
 }
 
 
-fn load_all_units(path: PathBuf) -> Result<Vec::<UnitAsset>, String> {
+fn load_all_units(path: PathBuf) -> Result<HashMap::<String, UnitAsset>, String> {
     let paths = fs::read_dir(path).unwrap();
 
-    let mut res = vec![];
+    let mut res = HashMap::default();
 
     for file_path in paths {
-
-        res.push(load_unit_file(file_path.unwrap().path()));
+        let fp = file_path.unwrap();
+        let file_name = fp.path().file_stem().unwrap().to_os_string().into_string().unwrap();
+        res.insert(file_name, load_unit_file(fp.path()));
     }
 
     Ok(res)
@@ -105,9 +107,10 @@ fn load_all_units(path: PathBuf) -> Result<Vec::<UnitAsset>, String> {
 
 fn load_unit_file(path: PathBuf) -> UnitAsset {
 
-    let file = fs::File::open(path).unwrap();
+    let file = fs::File::open(&path).unwrap();
 
     let lines = io::BufReader::new(file).lines();
+
 
     let mut res = UnitAsset {
         model_name: "".to_string()
@@ -115,7 +118,7 @@ fn load_unit_file(path: PathBuf) -> UnitAsset {
 
     for line_o in lines {
         if let Ok(line) = line_o {
-            if line.starts_with("model:") {
+            if line.starts_with("Model:") {
                 res.model_name = line.split(":").last().expect("model: should be followed by model name").trim().to_string();
 
             }
@@ -123,6 +126,10 @@ fn load_unit_file(path: PathBuf) -> UnitAsset {
     }
 
     // Check that model_name is set??
+    if res.model_name == "" {
+        panic!("Model name empty for {:#?}", path);
+    }
+
     res
 
 }

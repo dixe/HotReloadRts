@@ -7,6 +7,8 @@ use crate::spells::{self, ActiveAoeSpell, AllSpells};
 use crate::math::*;
 use crate::behaviour_tree::{Tree, TreeBuilder, heal_then_kill};
 use crate::render;
+use crate::loading;
+use std::collections::HashMap;
 
 
 // All info regarding the simulation
@@ -63,9 +65,10 @@ impl State {
 }
 
 
-pub fn populate(state: &mut State, render_data: &render::RenderData) {
+pub fn populate(state: &mut State, units: &HashMap::<String, loading::UnitAsset>, render_data: &render::RenderData) {
 
-    let boid_index = render_data.get_mesh_index("Boid");
+    let boid_unit = units.get("boid").unwrap();
+    let boid_index = render_data.get_mesh_index(&boid_unit.model_name);
     for i in 1..5 {
         for j in 1..5 {
             state.entities.add_entity(vector![i as f32 * 1.0, j as f32 * 1.0, 0.0], i % 3, boid_index);

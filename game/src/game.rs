@@ -28,6 +28,8 @@ pub struct Game {
     pub camera_controller: ControllerType,
 
 
+    pub game_assets: loading::GameAssets,
+
     pub play_state: PlayState,
 
     // TMP BUFFERS
@@ -120,13 +122,13 @@ pub extern "Rust" fn initialize_state(gl: &gl::Gl) -> Box<dyn shared::SharedStat
 
 
     let mut render_data = render::RenderData::new(gl, &base_path);
-    let all_assets = loading::load_all_assets(base_path).unwrap();
+    let game_assets = loading::load_all_assets(base_path).unwrap();
 
-    loading::populate_render_data(gl, &mut render_data, &all_assets.models);
+    loading::populate_render_data(gl, &mut render_data, &game_assets.models);
 
 
 
-    state::populate(&mut state, &render_data);
+    state::populate(&mut state, &game_assets.units, &render_data);
 
 
     Box::new(Game {
@@ -136,6 +138,7 @@ pub extern "Rust" fn initialize_state(gl: &gl::Gl) -> Box<dyn shared::SharedStat
         camera_controller,
         render_data,
         logic,
+        game_assets,
 
         tmp_buffer: vec![],
         play_state: PlayState::General,
@@ -146,7 +149,7 @@ pub extern "Rust" fn initialize_state(gl: &gl::Gl) -> Box<dyn shared::SharedStat
 
 pub fn reset(game: &mut Game) {
     game.state = state::init();
-    state::populate(&mut game.state, &game.render_data);
+    state::populate(&mut game.state, &game.game_assets.units, &game.render_data);
 }
 
 
@@ -158,23 +161,10 @@ pub fn reload_assets(game: &mut Game) {
 
     game.render_data.shaders.reload(&game.gl, &base_path);
 
-    let hashmap = std::collections::HashMap::new();
-    match gltf_mesh::meshes_from_gltf(&"E:/repos/HotReloadRts/assets/boid.glb", &hashmap) {
-        Ok(boid_gltf) => {
-            match boid_gltf.get_mesh(&game.gl, "Boid") {
-                Some(boid) => {
-                    game.render_data.replace_mesh("Boid", boid);
-                    println!("Reloaded boid");
-                },
-                None => {
-                    println!("Could not get boid from gltf_mesh");
-                }
-            }
-        },
-        Err(err) => {
-            println!("{:?}",err);
-        }
-    }
+
+    game.game_assets = loading::load_all_assets(base_path).unwrap();
+
+    state::populate(&mut game.state, &game.game_assets.units, &game.render_data);
 
     game.logic = reload::load();
 

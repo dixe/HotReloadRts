@@ -62,7 +62,7 @@ fn update_selected_command(state: &mut game::State) {
                                     // TODO: maybe handle on cooldown
                                     let spell_id = 1;
 
-                                    let cast_res = spells::cast_aoe_spell(V3::new(x, y, 0.0), select_id, spell_id, state);
+                                    let _cast_res = spells::cast_aoe_spell(V3::new(x, y, 0.0), select_id, spell_id, state);
 
                                  },
                                 _ => {
@@ -138,7 +138,7 @@ fn run_step(state: &mut game::State) {
                 }
             }
         } else {
-            //state.entities.velocities[i] = spread(i, &state.entities.positions, dt);
+            state.entities.velocities[i] = spread(i, &state.entities.positions, dt);
         }
 
     }

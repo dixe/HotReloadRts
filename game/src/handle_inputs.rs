@@ -91,7 +91,7 @@ fn handle_click(event: &sdl2::event::Event, game: &mut Game) {
                 // maybe return RayInfo from camera??
                 let hit_p = raycast_ground_plane(ray_info);
                 // Update selected pos to be, lift if above the ground pplane by a little bit to avoid clipping
-                game.state.select_pos = hit_p + vector![0.0, 0.0, 0.1];
+                game.state.select_pos = hit_p + vector![0.0, 0.0, 0.0001];
                 let target = Target::Position(hit_p.x, hit_p.y);
                 game.state.command = Command::DefaultRightClick(target);
 

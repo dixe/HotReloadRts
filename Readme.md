@@ -51,11 +51,13 @@ Only call behaviour tree when nothing is active in this table. That way we autom
 And the animation state will be driven by the behaviour/tables. And not a 'set' tree.
 
 
+## System
+E
 
 # Entity files
 Have some files that describes entitties.
 Can be different
-* Spells: The animation, spell info: function, cooldown, 
+* Spells: The animation, spell info: function, cooldown,
 * Entity: Stats and spells. This will also indirectly has info on which animations that will be cast, since they are contained in spells.
 
 Can we create checks, for entity skeleton, so we know they match. Fx if a boss has a different skeleton then a player char, can we ensure that the skeleton is different. Fx have animation speficy the skeleton, by id? And at load time we can check that the model and all spell->animations match.

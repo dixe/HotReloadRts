@@ -1,6 +1,6 @@
 extern crate shared;
 use nalgebra::vector;
-use gl_lib::{gl, na, objects::{plane, mesh, shadow_map, texture_quad, square}, shader::{self, Shader}};
+use gl_lib::{gl, na, objects::{plane, mesh, shadow_map, texture_quad,  square}, helpers, widget_gui::render, shader::{self, Shader}};
 use crate::game::*;
 use std::collections::HashMap;
 
@@ -102,7 +102,7 @@ pub struct RenderMesh<'a> {
 }
 
 
-pub fn render(gl: &gl::Gl, game: &Game) {
+pub fn render(gl: &gl::Gl, game: &mut Game) {
 
 
     // set shader uniforms
@@ -133,13 +133,20 @@ pub fn render(gl: &gl::Gl, game: &Game) {
 
 
 
+
+
+
     render_entities(gl, game);
 
     render_select_box(gl, game);
 
     render_health_bars(gl, game);
 
+    render_ui(gl, game);
+
     render_mouse(gl, game);
+
+
 }
 
 
@@ -152,9 +159,6 @@ fn render_entities(gl: &gl::Gl, game: &Game) {
         gl.BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
         gl.Enable( gl::BLEND );
     }
-
-
-
 
     for i in 0..game.state.entities.positions.len() {
 
@@ -324,9 +328,26 @@ fn render_health_bars(gl: &gl::Gl, game: &Game) {
         game.render_data.square.render(gl);
 
     }
-
 }
 
+
+fn render_ui(gl: &gl::Gl, game: &mut Game) {
+
+    if let Some(ui) = &mut game.ui {
+
+        let mut render_ctx = render::RenderContext {
+            gl: gl,
+            viewport: &game.camera.viewport(),
+            tr: &mut ui.widget_setup.text_renderer, // TODO: Maybe have a text renderer on render data, and use that one
+            rounded_rect_shader: &ui.widget_setup.rounded_rect_shader,
+            render_square: &ui.widget_setup.render_square,
+            circle_shader: &ui.widget_setup.circle_shader
+        };
+
+        render::render_ui(&ui.state, &mut render_ctx);
+
+    }
+}
 
 fn render_mouse(gl: &gl::Gl, game: &Game) {
     unsafe {

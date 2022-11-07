@@ -1,12 +1,12 @@
 extern crate shared;
 use crate::state;
-use gl_lib::{gl, na, camera};
+use gl_lib::{gl, helpers, na, camera, widget_gui::{self, UiState}};
 use crate::render;
 use crate::handle_inputs;
 use crate::commands::*;
 use crate::reload;
 use crate::loading;
-
+use crate::ui;
 
 //type ControllerType = camera::free_camera::Controller;
 type ControllerType = camera::rts_camera::Controller;
@@ -26,6 +26,9 @@ pub struct Game {
     pub camera: camera::Camera,
     pub camera_controller: ControllerType,
 
+
+    // UI
+    pub ui: Option<ui::Ui>,
 
     pub game_assets: loading::GameAssets,
 
@@ -47,6 +50,17 @@ impl shared::SharedState for Game {
         // run logic step
         (self.logic.step_fn)(&mut self.state);
 
+
+        // update ui
+        if let Some(ui) = &mut self.ui {
+            let  root_box = widget_gui::BoxContraint{ min_w: 0,
+                                                     max_w: self.camera.width as i32,
+                                                     min_h: 0,
+                                                     max_h: self.camera.height as i32
+            };
+
+            widget_gui::layout_widgets(&root_box, &mut ui.state);
+        }
 
         // render
        render::render(gl, self);
@@ -129,6 +143,16 @@ pub extern "Rust" fn initialize_state(gl: &gl::Gl) -> Box<dyn shared::SharedStat
 
     state::populate(&mut state, &game_assets.units, &render_data);
 
+    let mut widget_setup = helpers::setup_widgets(gl).unwrap();
+
+    let (info, ui_state) = ui::create_ui();
+
+    let ui = ui::Ui {
+        info,
+        state: ui_state,
+        widget_setup
+    };
+
 
     Box::new(Game {
         gl: gl.clone(),
@@ -138,7 +162,7 @@ pub extern "Rust" fn initialize_state(gl: &gl::Gl) -> Box<dyn shared::SharedStat
         render_data,
         logic,
         game_assets,
-
+        ui: Some(ui),
         tmp_buffer: vec![],
         play_state: PlayState::General,
 

@@ -104,6 +104,9 @@ pub struct RenderMesh<'a> {
 
 pub fn render(gl: &gl::Gl, game: &mut Game) {
 
+     unsafe {
+        gl.Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
+     }
 
     // set shader uniforms
     let light_pos = na::Vector3::new(0.0, 0.0, 30.0);
@@ -133,9 +136,6 @@ pub fn render(gl: &gl::Gl, game: &mut Game) {
 
 
 
-
-
-
     render_entities(gl, game);
 
     render_select_box(gl, game);
@@ -145,7 +145,6 @@ pub fn render(gl: &gl::Gl, game: &mut Game) {
     render_ui(gl, game);
 
     render_mouse(gl, game);
-
 
 }
 
@@ -229,6 +228,7 @@ fn render_entities(gl: &gl::Gl, game: &Game) {
         gl.ActiveTexture(gl::TEXTURE0);
         gl.BindTexture(gl::TEXTURE_2D, game.render_data.shadow_map.depth_map);
     }
+    println!("bind shadow to 0");
 
 
     // SPELLS

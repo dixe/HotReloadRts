@@ -1,5 +1,7 @@
 use crate::entity_system::EntityId;
 use gl_lib::{gl, sdl2::event, na, camera, widget_gui::*, helpers, widget_gui::widgets::*, widget_gui::layout::*};
+use std::any::Any;
+use crate::types::*;
 
 
 pub struct Ui {
@@ -18,13 +20,7 @@ pub fn create_ui() -> (UiInfo, UiState) {
 
     let sp_id = ui_state.add_widget(Box::new(sp_widget), None);
 
-    // Add dispatcher for add button
-    //ui_state.set_widget_dispatcher(button_id, Box::new(button_dispatcher));
-
-
     (UiInfo {selection_id: sp_id }, ui_state)
-
-
 }
 
 
@@ -51,7 +47,7 @@ impl SelectionPanelWidget {
 
 impl Widget for SelectionPanelWidget {
 
-    fn layout(&mut self, bc: &BoxContraint, _children: &[Id], ctx: &mut LayoutContext) -> LayoutResult {
+    fn layout(&mut self, _bc: &BoxContraint, _children: &[Id], ctx: &mut LayoutContext) -> LayoutResult {
         LayoutResult::Size(Size {
             pixel_w: 300,
             pixel_h: 100
@@ -59,29 +55,36 @@ impl Widget for SelectionPanelWidget {
     }
 
     fn render(&self, geom: &Geometry, ctx: &mut render::RenderContext) {
-        render::render_rect(geom, ctx);
+
+        let text = &format!("{}", self.entity_ids.len());
+
+        render::render_text(&text, 1.0, geom, ctx)
     }
 
-    fn dispatcher(&self) -> Dispatcher {
-        Box::new(selection_panel_dispatcher)
+
+    fn handle_widget_input(&mut self, input: Box::<dyn Any>) {
+
+        self.entity_ids.clear();
+        if let Ok(info) = input.downcast::<SliceInfo::<usize>>() {
+            let slice;
+            unsafe {
+                slice = std::slice::from_raw_parts(info. pointer, info.len);
+            }
+
+            for id in slice {
+                self.entity_ids.push(*id);
+            }
+        }
     }
 
-    fn handle_sdl_event(&mut self, event: &event::Event, geom: &Geometry, self_id: Id, queue: &mut DispatcherQueue) {
+    fn handle_sdl_event(&mut self,
+                        event: &event::Event,
+                        _geom: &Geometry,
+                        _self_id: Id,
+                        _widget_output_queue: &mut WidgetOutputQueue) {
 
         println!("Selection got event {:?}", event);
 
     }
 
-}
-
-
-
-fn selection_panel_dispatcher(event: &event::Event, self_id: Id, queue: &mut DispatcherQueue) {
-    use event::Event::*;
-    match event {
-        MouseButtonDown {..} => {
-            queue.push_back(DispatcherEvent { target_id: self_id, event: Box::new(())});
-        },
-        _ => {}
-    };
 }

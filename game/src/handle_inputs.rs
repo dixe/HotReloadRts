@@ -5,6 +5,8 @@ use gl_lib::sdl2::{self, keyboard::Keycode};
 use crate::game::*;
 use crate::commands::*;
 use crate::math::V3;
+use gl_lib::widget_gui::WidgetInput;
+use crate::types::*;
 
 pub fn handle_inputs(game: &mut Game, event_pump: &mut gl_lib::sdl2::EventPump) {
     let kb_map = setup_keyboard_mapping();
@@ -43,6 +45,21 @@ pub fn handle_inputs(game: &mut Game, event_pump: &mut gl_lib::sdl2::EventPump) 
 
         }
     }
+
+
+
+    if let Some(ui) = &mut game.ui {
+
+        // send a update to ui here just to test. Should be sent only when we change selection
+
+        let pointer = game.state.selected.as_ptr();
+        let len = game.state.selected.len();
+        let slice_info = SliceInfo { pointer, len };
+        ui.state.push_input_to_widget(WidgetInput { widget_id: ui.info.selection_id, input: Box::new(slice_info)} );
+        ui.state.dispatch_widget_inputs();
+    }
+
+
 }
 
 

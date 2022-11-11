@@ -118,9 +118,13 @@ impl SelectBox {
 #[no_mangle]
 pub extern "Rust" fn initialize_state(gl: &gl::Gl) -> Box<dyn shared::SharedState> {
 
+    // TODO: Figure out why when this is just above ui::create_ui(), the texture for font does not work
+    // But setting it here it works fine with both this and shadow map texture
+
+    let mut widget_setup = helpers::setup_widgets(gl).unwrap();
+
     let mut state = state::init();
     let logic = reload::load();
-
 
     let mut camera = camera::Camera::new(1200.0, 700.0);
 
@@ -143,7 +147,7 @@ pub extern "Rust" fn initialize_state(gl: &gl::Gl) -> Box<dyn shared::SharedStat
 
     state::populate(&mut state, &game_assets.units, &render_data);
 
-    let mut widget_setup = helpers::setup_widgets(gl).unwrap();
+
 
     let (info, ui_state) = ui::create_ui();
 

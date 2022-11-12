@@ -59,6 +59,7 @@ impl shared::SharedState for Game {
                                                      max_h: self.camera.height as i32
             };
 
+
             widget_gui::layout_widgets(&root_box, &mut ui.state);
         }
 

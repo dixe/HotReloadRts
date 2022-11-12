@@ -228,8 +228,6 @@ fn render_entities(gl: &gl::Gl, game: &Game) {
         gl.ActiveTexture(gl::TEXTURE0);
         gl.BindTexture(gl::TEXTURE_2D, game.render_data.shadow_map.depth_map);
     }
-    println!("bind shadow to 0");
-
 
     // SPELLS
     let mut z_offset = 0.001;
@@ -334,6 +332,9 @@ fn render_health_bars(gl: &gl::Gl, game: &Game) {
 fn render_ui(gl: &gl::Gl, game: &mut Game) {
 
     if let Some(ui) = &mut game.ui {
+        unsafe {
+            gl.Clear(gl::DEPTH_BUFFER_BIT);
+        }
 
         let mut render_ctx = render::RenderContext {
             gl: gl,

@@ -13,12 +13,19 @@ pub struct Ui {
 pub fn create_ui() -> (UiInfo, UiState) {
 
     let mut ui_state = UiState::new();
+
     let row = RowWidget {};
+    let col = ColumnWidget { };
+
+    let col_id = ui_state.add_widget(Box::new(col), None);
+    let row_id = ui_state.add_widget(Box::new(row), Some(col_id));
 
 
     let sp_widget = SelectionPanelWidget::new();
 
-    let sp_id = ui_state.add_widget(Box::new(sp_widget), None);
+    let sp_id = ui_state.add_widget(Box::new(sp_widget), Some(row_id));
+    ui_state.set_alignment_x(sp_id, AlignmentX::Center);
+    ui_state.set_alignment_y(row_id, AlignmentY::Bottom);
 
     (UiInfo {selection_id: sp_id }, ui_state)
 }
@@ -58,7 +65,9 @@ impl Widget for SelectionPanelWidget {
 
         let text = &format!("{}", self.entity_ids.len());
 
-        render::render_text(&text, 1.0, geom, ctx)
+
+        render::render_text(&text, 1.0, geom, ctx);
+        render::render_rect(geom, ctx);
     }
 
 

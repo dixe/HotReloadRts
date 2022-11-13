@@ -37,6 +37,7 @@ pub struct Entities {
     pub damage: DamageMap,
 
     pub skeletons: IntMap<EntityId, skeleton::Skeleton>,
+    //pub current_animation: IntMap<EntityId, ActiveAnimation>,
 
     pub cooldown: CoolDownMap,
 

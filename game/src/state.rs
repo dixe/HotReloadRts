@@ -76,8 +76,6 @@ pub fn populate(state: &mut State, game_assets: &loading::GameAssets, render_dat
     let boid_unit = units.get("boid").unwrap();
     let boid_index = render_data.get_mesh_index(&boid_unit.model_name);
 
-    println!("{:?}", boid_index);
-
     for i in 1..5 {
         for j in 1..5 {
             let id = state.entities.add_entity(vector![i as f32 * 1.0, j as f32 * 1.0, 0.0], i % 3, boid_index);

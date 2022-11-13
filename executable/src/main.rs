@@ -22,6 +22,7 @@ fn main() {
     let mut last_change = std::fs::metadata("E:/repos/HotReloadRts/target/debug/game.dll").unwrap().modified().unwrap();
 
     // this make mouse be slower, so we need higher sens in controller.
+    // TODO: Call this when we get sdl event that we entered the window. So it does not block mouse on startup
     sdl_setup.sdl.mouse().set_relative_mouse_mode(true);
 
 

@@ -22,7 +22,7 @@ pub struct UnitAsset {
 
 pub struct Model {
     pub mesh: gltf_mesh::GltfMesh, // not mesh::Mesh, since that requried gl, and creates data on the gpu
-    pub animations: HashMap::<String, Vec::<KeyFrame>>
+    pub animations: HashMap::<String, animations::Animation>
 }
 
 
@@ -63,10 +63,11 @@ fn load_all_glb(path: PathBuf) -> ModelsAssets {
                     Ok(meshes_gltf) => {
 
                         for (name, mesh) in &meshes_gltf.meshes {
-                            let animations = match mesh_animations.get(name) {
+                            let animations : animations::Animations = match mesh_animations.get(name) {
                                 Some(anis) => anis.clone(),
                                 None => Default::default()
                             };
+
 
                             let model = Model {
                                 mesh: mesh.clone(),
@@ -74,6 +75,7 @@ fn load_all_glb(path: PathBuf) -> ModelsAssets {
                             };
 
                             res.insert(name.clone(), model);
+
                         }
                     }
                     Err(err) => {

@@ -1,10 +1,13 @@
 use std::fs;
 use std::path::PathBuf;
 use std::io::{self, BufRead};
-use gl_lib::{gl, objects::{ skeleton, gltf_mesh}};
+use gl_lib::{gl, objects::{ gltf_mesh, mesh}, animations::{self, skeleton, types::KeyFrame}};
 use std::collections::HashMap;
 use crate::render;
 
+
+
+pub type ModelsAssets = HashMap::<String, Model>;
 
 pub struct GameAssets {
     pub units: HashMap::<String, UnitAsset>,
@@ -14,11 +17,12 @@ pub struct GameAssets {
 #[derive(Debug)]
 pub struct UnitAsset {
     pub model_name: String
+
 }
 
-pub struct ModelsAssets {
-    pub names: HashMap::<String, usize>,
-    pub meshes: Vec::<gltf_mesh::GltfMeshes>
+pub struct Model {
+    pub mesh: gltf_mesh::GltfMesh, // not mesh::Mesh, since that requried gl, and creates data on the gpu
+    pub animations: HashMap::<String, Vec::<KeyFrame>>
 }
 
 
@@ -42,10 +46,7 @@ pub fn load_all_assets(base_path: PathBuf) -> Result<GameAssets, String> {
 
 fn load_all_glb(path: PathBuf) -> ModelsAssets {
 
-    let mut res = ModelsAssets {
-        names: Default::default(),
-        meshes: vec![]
-    };
+    let mut res : ModelsAssets = Default::default();
 
     let paths = fs::read_dir(path).unwrap();
 
@@ -54,38 +55,34 @@ fn load_all_glb(path: PathBuf) -> ModelsAssets {
             let file_path: String = entry.path().into_os_string().into_string().unwrap();
             if file_path.ends_with(".glb") {
 
+                let skins = skeleton::load_skins(&file_path).unwrap();
+                let mesh_animations = animations::load_animations(&file_path, &skins);
 
-                let (_skeleton, index) = match skeleton::Skeleton::from_gltf(&file_path) {
-                    Ok(ok) => ok,
-                    Err(msg) => {
-                        println!("{:?}",msg);
-                        let s = skeleton::Skeleton { name: "empty".to_string(), joints: vec![]};
-                        let i = HashMap::default();
 
-                        (s,i)
-                    }
-                };
-
-                match gltf_mesh::meshes_from_gltf(&file_path, &index) {
+                match gltf_mesh::meshes_from_gltf(&file_path, &skins) {
                     Ok(meshes_gltf) => {
 
-                        let index = res.meshes.len();
+                        for (name, mesh) in &meshes_gltf.meshes {
+                            let animations = match mesh_animations.get(name) {
+                                Some(anis) => anis.clone(),
+                                None => Default::default()
+                            };
 
-                        for (name, _) in &meshes_gltf.meshes {
-                            res.names.insert(name.clone(), index);
+                            let model = Model {
+                                mesh: mesh.clone(),
+                                animations
+                            };
+
+                            res.insert(name.clone(), model);
                         }
-                        res.meshes.push(meshes_gltf);
                     }
                     Err(err) => {
                         println!("{:?}", err);
                     }
                 }
-
             }
         }
     }
-
-    println!("{:?}", res. names);
     res
 }
 
@@ -138,10 +135,12 @@ fn load_unit_file(path: PathBuf) -> UnitAsset {
 pub fn populate_render_data(gl: &gl::Gl, rd: &mut render::RenderData, models: &ModelsAssets) {
 
     // Setup render data first
-    for (name, &index) in &models.names {
-        let gltf_mesh = &models.meshes[index];
-        let mesh = gltf_mesh.get_mesh(gl, name).unwrap();
+    for (name, model) in models {
+        let mesh = model.mesh.get_mesh(gl);
+        // we also have animations on model
+        let animations = &model.animations;
 
         rd.set_mesh(name, mesh);
     }
+
 }

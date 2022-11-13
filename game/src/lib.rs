@@ -25,3 +25,6 @@ pub mod types;
 pub mod loading;
 
 pub mod ui;
+
+
+pub mod animation_system;

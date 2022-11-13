@@ -5,7 +5,7 @@ use gl_lib::sdl2::{self, keyboard::Keycode};
 use crate::game::*;
 use crate::commands::*;
 use crate::math::V3;
-use gl_lib::widget_gui::WidgetInput;
+use gl_lib::widget_gui::{event_handling::dispatch_event, WidgetInput};
 use crate::types::*;
 
 pub fn handle_inputs(game: &mut Game, event_pump: &mut gl_lib::sdl2::EventPump) {
@@ -21,6 +21,9 @@ pub fn handle_inputs(game: &mut Game, event_pump: &mut gl_lib::sdl2::EventPump) 
 
 
     for event in event_pump.poll_iter() {
+        if let Some(ui) = &mut game.ui {
+            dispatch_event(&mut ui.state, &event);
+        }
         game.camera_controller.update_events(event.clone());
         controller::on_input(event.clone(), &kb_map, game);
 
@@ -42,10 +45,8 @@ pub fn handle_inputs(game: &mut Game, event_pump: &mut gl_lib::sdl2::EventPump) 
 
                 }
             }
-
         }
     }
-
 
 
     if let Some(ui) = &mut game.ui {

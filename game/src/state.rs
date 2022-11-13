@@ -46,6 +46,7 @@ impl State {
 
             light: vector![0.0, -30.0, 30.0],
 
+
             //commands: vec![],
             dt: 1.0/60.0,
 
@@ -65,13 +66,22 @@ impl State {
 }
 
 
-pub fn populate(state: &mut State, units: &HashMap::<String, loading::UnitAsset>, render_data: &render::RenderData) {
+pub fn populate(state: &mut State, game_assets: &loading::GameAssets, render_data: &render::RenderData) {
+
+    let units = &game_assets.units;
+
+    // TODO: Define number of units in a scene asset file.
+    // for now use this
 
     let boid_unit = units.get("boid").unwrap();
     let boid_index = render_data.get_mesh_index(&boid_unit.model_name);
+
+    println!("{:?}", boid_index);
+
     for i in 1..5 {
         for j in 1..5 {
-            state.entities.add_entity(vector![i as f32 * 1.0, j as f32 * 1.0, 0.0], i % 3, boid_index);
+            let id = state.entities.add_entity(vector![i as f32 * 1.0, j as f32 * 1.0, 0.0], i % 3, boid_index);
+            //state.entities.add_skeleton(id, boid_skeleton.clone());
         }
     }
 }

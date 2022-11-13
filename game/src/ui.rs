@@ -1,5 +1,5 @@
 use crate::entity_system::EntityId;
-use gl_lib::{gl, sdl2::event, na, camera, widget_gui::*, helpers, widget_gui::widgets::*, widget_gui::layout::*};
+use gl_lib::{gl, sdl2::{self, event}, na, camera, widget_gui::*, helpers, widget_gui::widgets::*, widget_gui::layout::*};
 use std::any::Any;
 use crate::types::*;
 
@@ -88,12 +88,22 @@ impl Widget for SelectionPanelWidget {
 
     fn handle_sdl_event(&mut self,
                         event: &event::Event,
-                        _geom: &Geometry,
+                        geom: &Geometry,
                         _self_id: Id,
                         _widget_output_queue: &mut WidgetOutputQueue) {
 
-        println!("Selection got event {:?}", event);
+
+        use sdl2::event::Event::*;
+        match event.clone() {
+            MouseButtonDown{mouse_btn, x, y, ..} => {
+                if mouse_btn == sdl2::mouse::MouseButton::Left {
+                    let relative_x = x - geom.pos.x;
+                    let relative_y = y - geom.pos.y;
+                    println!("pressed at: {:?}", (relative_x, relative_y));
+                }
+            },
+            _ => {}
+        }
 
     }
-
 }

@@ -3,7 +3,7 @@ use nohash_hasher::IntMap;
 use crate::math::*;
 use crate::spells::SpellId;
 use crate::types::*;
-use gl_lib::objects::skeleton;
+use gl_lib::animations::skeleton;
 
 
 pub type EntityId = usize;
@@ -99,5 +99,8 @@ impl Entities {
         self.id_to_index.remove(id);
     }
 
+    pub fn add_skeleton(&mut self, id: EntityId, skeleton: skeleton::Skeleton) {
+        self.skeletons.insert(id, skeleton);
+    }
 
 }

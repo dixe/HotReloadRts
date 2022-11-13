@@ -140,15 +140,10 @@ pub extern "Rust" fn initialize_state(gl: &gl::Gl) -> Box<dyn shared::SharedStat
 
 
     let mut render_data = render::RenderData::new(gl, &base_path);
+
     let game_assets = loading::load_all_assets(base_path).unwrap();
-
     loading::populate_render_data(gl, &mut render_data, &game_assets.models);
-
-
-
-    state::populate(&mut state, &game_assets.units, &render_data);
-
-
+    state::populate(&mut state, &game_assets, &render_data);
 
     let (info, ui_state) = ui::create_ui();
 
@@ -177,7 +172,7 @@ pub extern "Rust" fn initialize_state(gl: &gl::Gl) -> Box<dyn shared::SharedStat
 
 pub fn reset(game: &mut Game) {
     game.state = state::init();
-    state::populate(&mut game.state, &game.game_assets.units, &game.render_data);
+    state::populate(&mut game.state, &game.game_assets, &game.render_data);
 }
 
 
@@ -192,7 +187,7 @@ pub fn reload_assets(game: &mut Game) {
     game.game_assets = loading::load_all_assets(base_path).unwrap();
 
 
-    state::populate(&mut game.state, &game.game_assets.units, &game.render_data);
+    state::populate(&mut game.state, &game.game_assets, &game.render_data);
 
     game.logic = reload::load();
 

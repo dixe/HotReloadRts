@@ -66,7 +66,6 @@ impl RenderData {
             }
         };
 
-        println!("Set {:?} to index={}", name, index);
         index
     }
 

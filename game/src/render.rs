@@ -1,6 +1,6 @@
 extern crate shared;
 use nalgebra::vector;
-use gl_lib::{gl, na, objects::{plane, mesh, shadow_map, texture_quad,  square}, helpers, widget_gui::render, shader::{self, Shader}};
+use gl_lib::{gl, na, objects::{plane, mesh, shadow_map, texture_quad,  square}, animations::skeleton, helpers, widget_gui::render, shader::{self, Shader}};
 use crate::game::*;
 use std::collections::HashMap;
 
@@ -93,7 +93,15 @@ pub fn create_shader(gl: &gl::Gl, root_path: &std::path::PathBuf, name: &str) ->
     let frag_source = std::fs::read_to_string(frag_shader_path.clone())
         .expect(&format!("Could not reader frag shader file at: {:?}", frag_shader_path));
 
-    shader::BaseShader::new(gl, &vert_source, &frag_source)
+    shader::BaseShader::new(gl, &vert_source, &frag_source).map(|mut s| {
+        // TODO: maybe just preload all uniforms and have an enum for lookup in hashmap
+        // Preload location of uBones uniform
+        if name.starts_with("bone") {
+            s.set_locations(gl, "uBones");
+        }
+        s
+    })
+
 }
 
 
@@ -102,6 +110,7 @@ pub struct RenderMesh<'a> {
     pub model_mat: na::Matrix4::<f32>,
     pub mesh: &'a mesh::Mesh,
     pub color: na::Vector3::<f32>,
+    pub joints: Option::<&'a skeleton::Joints>
 }
 
 
@@ -149,7 +158,7 @@ pub fn render(gl: &gl::Gl, game: &mut Game) {
 
     render_mouse(gl, game);
 
-    print_fps(&game);
+    //print_fps(&game);
 
 }
 
@@ -174,6 +183,8 @@ fn render_entities(gl: &gl::Gl, game: &Game) {
 
     for i in 0..game.state.entities.positions.len() {
 
+
+        let id = game.state.entities.ids[i];
         let mut model_mat = na::Matrix4::identity();
         model_mat = model_mat.append_nonuniform_scaling(&na::Vector3::new(0.2, 0.2, 0.2));
         let rotation = game.state.entities.z_rotations[i];
@@ -196,10 +207,11 @@ fn render_entities(gl: &gl::Gl, game: &Game) {
 
         let mesh_index = game.state.entities.mesh_index[i];
         render_objs.push(RenderMesh {
-            shader: &game.render_data.shaders.mesh_shader,
+            shader: &game.render_data.shaders.bone_mesh_shader,
             model_mat,
             mesh: &game.render_data.meshes[mesh_index],
-            color: color
+            color: color,
+            joints: game.state.entities.joints.get(&id),
         });
     }
 
@@ -208,10 +220,11 @@ fn render_entities(gl: &gl::Gl, game: &Game) {
     let mut model_mat = na::Matrix4::identity();
     model_mat = model_mat.prepend_nonuniform_scaling(&vector![plane_scale, plane_scale, 1.0]);
     render_objs.push(RenderMesh {
-            shader: &game.render_data.shaders.mesh_shader,
-            model_mat,
-            mesh: &game.render_data.plane,
-            color: vector![150.0/255.0, 74.0/255.0, 39.0/255.0]
+        shader: &game.render_data.shaders.mesh_shader,
+        model_mat,
+        mesh: &game.render_data.plane,
+        color: vector![150.0/255.0, 74.0/255.0, 39.0/255.0],
+        joints: None
     });
 
 
@@ -220,10 +233,11 @@ fn render_entities(gl: &gl::Gl, game: &Game) {
     model_mat = model_mat.prepend_nonuniform_scaling(&vector![0.2, 0.2, 1.0]);
     model_mat = model_mat.append_translation(&game.state.select_pos);
     render_objs.push(RenderMesh {
-            shader: &game.render_data.shaders.mesh_shader,
-            model_mat,
-            mesh: &game.render_data.plane,
-            color: vector![0.0, 0.0, 0.0]
+        shader: &game.render_data.shaders.mesh_shader,
+        model_mat,
+        mesh: &game.render_data.plane,
+        color: vector![0.0, 0.0, 0.0],
+        joints: None
     });
 
 
@@ -245,21 +259,37 @@ fn render_entities(gl: &gl::Gl, game: &Game) {
     // SPELLS
     let mut z_offset = 0.001;
     for i in 0..game.state.active_aoe_spells.len() {
+
         let pos = game.state.active_aoe_spells[i].pos;
         let r = game.state.active_aoe_spells[i].radius;
         let mut model_mat = na::Matrix4::identity();
+
+
         model_mat = model_mat.prepend_nonuniform_scaling(&vector![r * 2.0, r * 2.0, 1.0]);
         model_mat = model_mat.append_translation(&(pos + vector![0.0, 0.0, z_offset]));
+
         render_objs.push(RenderMesh {
             shader: &game.render_data.shaders.spell_shader,
             model_mat,
             mesh: &game.render_data.plane,
-            color: vector![7.0/255.0, 171.0/255.0, 40.0/255.0]
+            color: vector![7.0/255.0, 171.0/255.0, 40.0/255.0],
+            joints: None
         });
         z_offset += 0.001;
     }
 
     for ro in render_objs {
+        // Set joints/bones if we have them
+        if let Some(joints) = ro.joints {
+
+            let bones_loc = ro.shader.get_location("uBones");
+            let len : i32 = joints.len() as i32;
+
+            unsafe {
+                gl.UniformMatrix4fv(bones_loc, len, gl::FALSE, joints.as_ptr() as *const f32);
+            }
+        }
+
         ro.shader.set_used();
         ro.shader.set_vec3(gl, "color", ro.color);
         ro.shader.set_mat4(gl, "model", ro.model_mat);

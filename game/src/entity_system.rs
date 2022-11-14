@@ -36,7 +36,7 @@ pub struct Entities {
 
     pub damage: DamageMap,
 
-    pub skeletons: IntMap<EntityId, skeleton::Skeleton>,
+    pub joints: IntMap<EntityId, skeleton::Joints>,
     //pub current_animation: IntMap<EntityId, ActiveAnimation>,
 
     pub cooldown: CoolDownMap,
@@ -100,8 +100,8 @@ impl Entities {
         self.id_to_index.remove(id);
     }
 
-    pub fn add_skeleton(&mut self, id: EntityId, skeleton: skeleton::Skeleton) {
-        self.skeletons.insert(id, skeleton);
+    pub fn add_joints(&mut self, id: EntityId, joints: skeleton::Joints) {
+        self.joints.insert(id, joints);
     }
 
 }

@@ -15,7 +15,6 @@ in VS_OUTPUT {
   vec3 FragPos;
   vec3 Normal;
   vec4 FragPosLightSpace;
-  vec3 Apos;
 } IN;
 
 

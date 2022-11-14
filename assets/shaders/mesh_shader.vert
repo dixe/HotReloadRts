@@ -7,7 +7,6 @@ out VS_OUTPUT {
   vec3 FragPos;
   vec3 Normal;
   vec4 FragPosLightSpace;
-  vec3 Apos;
 } OUT;
 
 
@@ -23,7 +22,6 @@ void main()
   OUT.Normal = transpose(inverse(mat3(model))) * aNormal;
   OUT.FragPos = vec3(model * pos);
   OUT.FragPosLightSpace = lightSpaceMat * vec4(OUT.FragPos, 1.0);
-  OUT.Apos = aPos;
 
   gl_Position = projection * view * model * pos;
 }

@@ -87,7 +87,7 @@ pub fn populate(state: &mut State, game_assets: &loading::GameAssets, render_dat
             let id = state.entities.add_entity(vector![i as f32 * 1.0, j as f32 * 1.0, 0.0], i % 3, boid_index);
 
             if let Some(ma) = &model_animations {
-                state.entities.add_skeleton(id, ma.skeleton.clone());
+                state.entities.add_joints(id, ma.skeleton.joints.clone());
                 // add animations too, but maybe we should just store animations on render_data, since duplicating them
                 // for all entities seems wastefull. We only need them once, to do interpolation for the given entitys
                 // skeleton. Which we then can render

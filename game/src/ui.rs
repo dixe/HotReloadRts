@@ -1,5 +1,5 @@
 use crate::entity_system::EntityId;
-use gl_lib::{gl, sdl2::{self, event}, na, camera, widget_gui::*, helpers, widget_gui::widgets::*, widget_gui::layout::*};
+use gl_lib::{sdl2::{self, event}, widget_gui::*, widget_gui::widgets::*, widget_gui::layout::*};
 use std::any::Any;
 use crate::types::*;
 
@@ -7,7 +7,6 @@ use crate::types::*;
 pub struct Ui {
     pub info: UiInfo,
     pub state: UiState,
-    pub widget_setup: helpers::WidgetSetup
 }
 
 pub fn create_ui() -> (UiInfo, UiState) {
@@ -54,7 +53,7 @@ impl SelectionPanelWidget {
 
 impl Widget for SelectionPanelWidget {
 
-    fn layout(&mut self, _bc: &BoxContraint, _children: &[Id], ctx: &mut LayoutContext) -> LayoutResult {
+    fn layout(&mut self, _bc: &BoxContraint, _children: &[Id], _ctx: &mut LayoutContext) -> LayoutResult {
         LayoutResult::Size(Size {
             pixel_w: 300,
             pixel_h: 100

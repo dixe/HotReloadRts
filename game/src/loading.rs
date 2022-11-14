@@ -1,7 +1,7 @@
 use std::fs;
 use std::path::PathBuf;
 use std::io::{self, BufRead};
-use gl_lib::{gl, objects::{ gltf_mesh, mesh}, animations::{self, skeleton, types::KeyFrame}};
+use gl_lib::{gl, objects::gltf_mesh, animations::{self, skeleton}};
 use std::collections::HashMap;
 use crate::render;
 
@@ -22,9 +22,15 @@ pub struct UnitAsset {
 
 pub struct Model {
     pub mesh: gltf_mesh::GltfMesh, // not mesh::Mesh, since that requried gl, and creates data on the gpu
-    pub animations: HashMap::<String, animations::Animation>
+    pub animations: Option::<ModelAnimations>,
 }
 
+#[derive(Debug, Clone)]
+pub struct ModelAnimations {
+    pub skeleton: skeleton::Skeleton,
+    pub animations: HashMap::<String, animations::Animation>,
+
+}
 
 
 pub fn load_all_assets(base_path: PathBuf) -> Result<GameAssets, String> {
@@ -63,9 +69,16 @@ fn load_all_glb(path: PathBuf) -> ModelsAssets {
                     Ok(meshes_gltf) => {
 
                         for (name, mesh) in &meshes_gltf.meshes {
-                            let animations : animations::Animations = match mesh_animations.get(name) {
-                                Some(anis) => anis.clone(),
-                                None => Default::default()
+                            let animations = match mesh_animations.get(name) {
+                                Some(anis) => {
+                                    let skin_id = skins.mesh_to_skin.get(name).unwrap();
+                                    let skeleton = skins.skeletons.get(&skin_id).unwrap().clone();
+                                    Some(ModelAnimations {
+                                        animations: anis.clone(),
+                                        skeleton
+                                    })
+                                },
+                                None => None
                             };
 
 
@@ -139,8 +152,9 @@ pub fn populate_render_data(gl: &gl::Gl, rd: &mut render::RenderData, models: &M
     // Setup render data first
     for (name, model) in models {
         let mesh = model.mesh.get_mesh(gl);
+
         // we also have animations on model
-        let animations = &model.animations;
+        //let animations = &model.animations;
 
         rd.set_mesh(name, mesh);
     }

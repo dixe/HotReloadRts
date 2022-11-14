@@ -9,7 +9,7 @@ fn main() {
     println!("{:?}", out_dir);
 
     let mut cur_dir = std::env::current_dir().unwrap();
-    cur_dir.push("../assets");
+    cur_dir.push("../assets/shaders");
 
 
 

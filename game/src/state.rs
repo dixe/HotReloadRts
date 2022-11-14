@@ -8,7 +8,6 @@ use crate::math::*;
 use crate::behaviour_tree::{Tree, TreeBuilder, heal_then_kill};
 use crate::render;
 use crate::loading;
-use std::collections::HashMap;
 
 
 // All info regarding the simulation
@@ -76,10 +75,23 @@ pub fn populate(state: &mut State, game_assets: &loading::GameAssets, render_dat
     let boid_unit = units.get("boid").unwrap();
     let boid_index = render_data.get_mesh_index(&boid_unit.model_name);
 
+    let model_animations = match game_assets.models.get(&boid_unit.model_name)  {
+        Some(model) => {
+            model.animations.clone()
+        },
+        None => None
+    };
+
     for i in 1..5 {
         for j in 1..5 {
             let id = state.entities.add_entity(vector![i as f32 * 1.0, j as f32 * 1.0, 0.0], i % 3, boid_index);
-            //state.entities.add_skeleton(id, boid_skeleton.clone());
+
+            if let Some(ma) = &model_animations {
+                state.entities.add_skeleton(id, ma.skeleton.clone());
+                // add animations too, but maybe we should just store animations on render_data, since duplicating them
+                // for all entities seems wastefull. We only need them once, to do interpolation for the given entitys
+                // skeleton. Which we then can render
+            }
         }
     }
 }

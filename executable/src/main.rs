@@ -25,6 +25,9 @@ fn main() {
     // TODO: Call this when we get sdl event that we entered the window. So it does not block mouse on startup
     sdl_setup.sdl.mouse().set_relative_mouse_mode(true);
 
+    let video_subsystem = sdl_setup.sdl.video().unwrap();
+
+    let _res = video_subsystem.gl_set_swap_interval(0);
 
     loop {
 

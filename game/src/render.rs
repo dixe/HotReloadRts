@@ -24,13 +24,16 @@ pub struct RenderData {
 
     // SHADERS
     pub shaders: Shaders,
+
+    // WIDGET SETUP
+    pub widget_setup: helpers::WidgetSetup
 }
 
 
 impl RenderData {
 
 
-    pub fn new(gl: &gl::Gl, base_path: &std::path::PathBuf) -> Self {
+    pub fn new(gl: &gl::Gl, base_path: &std::path::PathBuf, widget_setup: helpers::WidgetSetup) -> Self {
 
         let plane = plane::Plane::new(gl);
 
@@ -43,6 +46,7 @@ impl RenderData {
             shadow_map: shadow_map::ShadowMap::new(&gl),
             tex_quad: texture_quad::TextureQuad::new(&gl),
             shaders: Shaders::new(gl, &base_path),
+            widget_setup
         }
     }
 
@@ -80,12 +84,12 @@ impl RenderData {
 
 
 pub fn create_shader(gl: &gl::Gl, root_path: &std::path::PathBuf, name: &str) -> Result<shader::BaseShader, failure::Error> {
-    let vert_shader_path =  std::path::Path::new(root_path).join(format!("{}.vert", name));
+    let vert_shader_path =  std::path::Path::new(root_path).join(format!("shaders/{}.vert", name));
     let vert_source = std::fs::read_to_string(vert_shader_path.clone())
         .expect(&format!("Could not reader vert shader file at: {:?}", vert_shader_path));
 
 
-    let frag_shader_path = std::path::Path::new(root_path).join(format!("{}.frag", name));
+    let frag_shader_path = std::path::Path::new(root_path).join(format!("shaders/{}.frag", name));
     let frag_source = std::fs::read_to_string(frag_shader_path.clone())
         .expect(&format!("Could not reader frag shader file at: {:?}", frag_shader_path));
 
@@ -145,6 +149,16 @@ pub fn render(gl: &gl::Gl, game: &mut Game) {
 
     render_mouse(gl, game);
 
+    print_fps(&game);
+
+}
+
+#[allow(dead_code)]
+fn print_fps(game: &Game){
+
+    // render fps
+    let fps = 1.0 / game.state.dt;
+    println!("{:?}", fps);
 }
 
 
@@ -338,10 +352,10 @@ fn render_ui(gl: &gl::Gl, game: &mut Game) {
         let mut render_ctx = render::RenderContext {
             gl: gl,
             viewport: &game.camera.viewport(),
-            tr: &mut ui.widget_setup.text_renderer, // TODO: Maybe have a text renderer on render data, and use that one
-            rounded_rect_shader: &ui.widget_setup.rounded_rect_shader,
-            render_square: &ui.widget_setup.render_square,
-            circle_shader: &ui.widget_setup.circle_shader
+            tr: &mut game.render_data.widget_setup.text_renderer, // TODO: Maybe have a text renderer on render data, and use that one
+            rounded_rect_shader: &game.render_data.widget_setup.rounded_rect_shader,
+            render_square: &game.render_data.widget_setup.render_square,
+            circle_shader: &game.render_data.widget_setup.circle_shader
         };
 
         render::render_ui(&ui.state, &mut render_ctx);

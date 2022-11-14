@@ -1,12 +1,14 @@
 extern crate shared;
 use crate::state;
-use gl_lib::{gl, helpers, na, camera, widget_gui::{self, UiState}};
+use gl_lib::{gl, helpers, na, camera, widget_gui};
 use crate::render;
 use crate::handle_inputs;
 use crate::commands::*;
 use crate::reload;
 use crate::loading;
 use crate::ui;
+use crate::deltatime;
+
 
 //type ControllerType = camera::free_camera::Controller;
 type ControllerType = camera::rts_camera::Controller;
@@ -26,6 +28,7 @@ pub struct Game {
     pub camera: camera::Camera,
     pub camera_controller: ControllerType,
 
+    pub deltatime: deltatime::Deltatime,
 
     // UI
     pub ui: Option<ui::Ui>,
@@ -42,6 +45,10 @@ pub struct Game {
 
 impl shared::SharedState for Game {
     fn update_and_render(&mut self, gl: &gl::Gl, event_pump: &mut gl_lib::sdl2::EventPump) {
+
+        self.deltatime.update();
+
+        self.state.dt = self.deltatime.time();
 
         handle_inputs::handle_inputs(self, event_pump);
 
@@ -122,7 +129,7 @@ pub extern "Rust" fn initialize_state(gl: &gl::Gl) -> Box<dyn shared::SharedStat
     // TODO: Figure out why when this is just above ui::create_ui(), the texture for font does not work
     // But setting it here it works fine with both this and shadow map texture
 
-    let mut widget_setup = helpers::setup_widgets(gl).unwrap();
+    let widget_setup = helpers::setup_widgets(gl).unwrap();
 
     let mut state = state::init();
     let logic = reload::load();
@@ -139,7 +146,7 @@ pub extern "Rust" fn initialize_state(gl: &gl::Gl) -> Box<dyn shared::SharedStat
     let base_path: std::path::PathBuf = "E:/repos/HotReloadRts/assets".to_string().into();
 
 
-    let mut render_data = render::RenderData::new(gl, &base_path);
+    let mut render_data = render::RenderData::new(gl, &base_path, widget_setup);
 
     let game_assets = loading::load_all_assets(base_path).unwrap();
     loading::populate_render_data(gl, &mut render_data, &game_assets.models);
@@ -150,7 +157,6 @@ pub extern "Rust" fn initialize_state(gl: &gl::Gl) -> Box<dyn shared::SharedStat
     let ui = ui::Ui {
         info,
         state: ui_state,
-        widget_setup
     };
 
 
@@ -162,6 +168,7 @@ pub extern "Rust" fn initialize_state(gl: &gl::Gl) -> Box<dyn shared::SharedStat
         render_data,
         logic,
         game_assets,
+        deltatime: deltatime::Deltatime::new(),
         ui: Some(ui),
         tmp_buffer: vec![],
         play_state: PlayState::General,
@@ -183,6 +190,22 @@ pub fn reload_assets(game: &mut Game) {
     let base_path: std::path::PathBuf = "E:/repos/HotReloadRts/assets".to_string().into();
 
     game.render_data.shaders.reload(&game.gl, &base_path);
+
+    let text_shader_root_path: std::path::PathBuf = "E:/repos/rust-gl-lib/assets/shaders".to_string().into();
+    match render::create_shader(&game.gl, &text_shader_root_path, "sdf_text_render") {
+        Ok(s) => {
+
+            game.render_data.widget_setup.text_renderer.change_shader(s);
+        },
+        Err(e) => {
+            println!("Failed to load text_render shader:\n{:?}", e);
+        }
+    };
+
+
+
+
+
 
     game.game_assets = loading::load_all_assets(base_path).unwrap();
 

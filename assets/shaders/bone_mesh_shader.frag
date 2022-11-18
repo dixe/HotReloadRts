@@ -81,8 +81,5 @@ void main()
   // SHADOW
   float shadow = ShadowCalculation(IN.FragPosLightSpace, norm, lightDir);
 
-  //FragColor = vec4((ambient +  (1.0 - shadow) * (diffuse + specular)) * col, 1.0f);
-
-  FragColor = vec4(1.0);
-
+  FragColor = vec4((ambient +  (1.0 - shadow) * (diffuse + specular)) * col, 1.0f);
 }

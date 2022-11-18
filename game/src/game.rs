@@ -191,7 +191,7 @@ pub fn reload_assets(game: &mut Game) {
 
     game.render_data.shaders.reload(&game.gl, &base_path);
 
-    let text_shader_root_path: std::path::PathBuf = "E:/repos/rust-gl-lib/assets/shaders".to_string().into();
+    let text_shader_root_path: std::path::PathBuf = "E:/repos/rust-gl-lib/assets/".to_string().into();
     match render::create_shader(&game.gl, &text_shader_root_path, "sdf_text_render") {
         Ok(s) => {
 
@@ -203,14 +203,7 @@ pub fn reload_assets(game: &mut Game) {
     };
 
 
-
-
-
-
     game.game_assets = loading::load_all_assets(base_path).unwrap();
-
-
-    state::populate(&mut game.state, &game.game_assets, &game.render_data);
 
     game.logic = reload::load();
 

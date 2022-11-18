@@ -1,9 +1,8 @@
 #version 330 core
-
 layout (location = 0) in vec3 aPos;
 layout (location = 1) in vec3 aNormal;
-//layout (location = 2) in vec2 aBoneWeights;
-//layout (location = 3) in vec2 aBoneIndices;
+layout (location = 2) in vec2 aBoneWeights;
+layout (location = 3) in vec2 aBoneIndices;
 
 uniform mat4 uBones[32];
 
@@ -22,10 +21,7 @@ uniform mat4 projection;
 uniform mat4 lightSpaceMat;
 uniform vec3 color;
 
-
-
-
-/*mat4 boneTransform() {
+mat4 boneTransform() {
 
   if(int(aBoneIndices.x) < 0)
   {
@@ -35,35 +31,31 @@ uniform vec3 color;
 
   // Weight1 * Bone1 + Weight2 * Bone2
   ret = aBoneWeights.x * uBones[int(aBoneIndices.x)]
-       + aBoneWeights.y * uBones[int(aBoneIndices.y)];
+    + aBoneWeights.y * uBones[int(aBoneIndices.y)];
 
-  //return ret;
-
-  return mat4(1.0);
+  return ret;
 
 }
-*/
+
 
 void main()
 {
-  mat4 bt = mat4(1.0); // boneTransform();
+  mat4 bt = boneTransform();
 
+  int b = 16;
 
-  /*
-int b = 16;
+  if ( int(aBoneIndices.x) == b || int(aBoneIndices.y) == b)
+  {
+    OUT.Color = vec3(0.0, 0.0, 0.0);
+  }
 
-      if ( int(aBoneIndices.x) == b || int(aBoneIndices.y) == b)
-        {
-        OUT.Color = vec3(0.0, 0.0, 0.0);
-        }
-  */
-  vec4 pos = vec4(aPos, 1.0);
-  OUT.FragPos = vec3(model * bt * pos);
-  OUT.Normal = mat3(transpose(inverse(model * bt))) * vec4(aNormal, 1.0).xyz;
+  vec4 pos = model * bt * vec4(aPos, 1.0);
+
+  OUT.FragPos = vec3(model * bt * vec4(aPos, 1.0));
+  OUT.Normal = mat3(transpose(inverse(model * bt))) * aNormal;
   OUT.FragPosLightSpace = lightSpaceMat * vec4(OUT.FragPos, 1.0);
   OUT.Color = color;
 
-  gl_Position =  projection * view * model  * bt * pos;
-
+  gl_Position =  projection * view  * pos;
 
 }

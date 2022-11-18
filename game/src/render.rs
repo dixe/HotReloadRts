@@ -3,6 +3,7 @@ use nalgebra::vector;
 use gl_lib::{gl, na, objects::{plane, mesh, shadow_map, texture_quad,  square}, animations::skeleton, helpers, widget_gui::render, shader::{self, Shader}};
 use crate::game::*;
 use std::collections::HashMap;
+use crate::*;
 
 pub type MeshIndex = usize;
 
@@ -110,7 +111,7 @@ pub struct RenderMesh<'a> {
     pub model_mat: na::Matrix4::<f32>,
     pub mesh: &'a mesh::Mesh,
     pub color: na::Vector3::<f32>,
-    pub joints: Option::<&'a skeleton::Joints>
+    pub skeleton: Option::<&'a skeleton::Skeleton>
 }
 
 
@@ -139,6 +140,16 @@ pub fn render(gl: &gl::Gl, game: &mut Game) {
     ms.set_mat4(gl, "view", view);
     ms.set_mat4(gl, "projection", projection);
     ms.set_mat4(gl, "lightSpaceMat", light_space_mat);
+
+
+    let bms = &game.render_data.shaders.bone_mesh_shader;
+    bms.set_used();
+
+    bms.set_vec3(gl, "lightColor", na::Vector3::new(1.0, 1.0, 1.0));
+    bms.set_vec3(gl, "lightPos", light_pos);
+    bms.set_mat4(gl, "view", view);
+    bms.set_mat4(gl, "projection", projection);
+    bms.set_mat4(gl, "lightSpaceMat", light_space_mat);
 
 
     let ss = &game.render_data.shaders.spell_shader;
@@ -211,7 +222,7 @@ fn render_entities(gl: &gl::Gl, game: &Game) {
             model_mat,
             mesh: &game.render_data.meshes[mesh_index],
             color: color,
-            joints: game.state.entities.joints.get(&id),
+            skeleton: game.state.entities.skeletons.get(&id),
         });
     }
 
@@ -224,7 +235,7 @@ fn render_entities(gl: &gl::Gl, game: &Game) {
         model_mat,
         mesh: &game.render_data.plane,
         color: vector![150.0/255.0, 74.0/255.0, 39.0/255.0],
-        joints: None
+        skeleton: None
     });
 
 
@@ -237,7 +248,7 @@ fn render_entities(gl: &gl::Gl, game: &Game) {
         model_mat,
         mesh: &game.render_data.plane,
         color: vector![0.0, 0.0, 0.0],
-        joints: None
+        skeleton: None
     });
 
 
@@ -273,26 +284,40 @@ fn render_entities(gl: &gl::Gl, game: &Game) {
             model_mat,
             mesh: &game.render_data.plane,
             color: vector![7.0/255.0, 171.0/255.0, 40.0/255.0],
-            joints: None
+            skeleton: None
         });
         z_offset += 0.001;
     }
 
     for ro in render_objs {
+        ro.shader.set_used();
+
+
         // Set joints/bones if we have them
-        if let Some(joints) = ro.joints {
+        if let Some(skeleton) = ro.skeleton {
+            let mut key_frame = animation_system::keyframe_from_t(&skeleton, 0, 0.0);
+
+            let mut bones = vec![];
+            for _ in 0..skeleton.joints.len() {
+                bones.push(na::Matrix4::<f32>::identity());
+            }
+
+            skeleton.set_bones_from_skeleton(&mut bones);
 
             let bones_loc = ro.shader.get_location("uBones");
-            let len : i32 = joints.len() as i32;
+            let len = bones.len() as i32;
+            // maybe calc and store this in entity
+
 
             unsafe {
-                gl.UniformMatrix4fv(bones_loc, len, gl::FALSE, joints.as_ptr() as *const f32);
+                gl.UniformMatrix4fv(bones_loc, len, gl::FALSE, bones.as_ptr() as *const f32);
             }
         }
 
-        ro.shader.set_used();
+
         ro.shader.set_vec3(gl, "color", ro.color);
         ro.shader.set_mat4(gl, "model", ro.model_mat);
+
         ro.mesh.render(gl);
     }
 

@@ -102,7 +102,6 @@ pub fn create_shader(gl: &gl::Gl, root_path: &std::path::PathBuf, name: &str) ->
         }
         s
     })
-
 }
 
 
@@ -111,7 +110,7 @@ pub struct RenderMesh<'a> {
     pub model_mat: na::Matrix4::<f32>,
     pub mesh: &'a mesh::Mesh,
     pub color: na::Vector3::<f32>,
-    pub skeleton: Option::<&'a skeleton::Skeleton>
+    pub bones: Option::<&'a skeleton::Bones>
 }
 
 
@@ -222,7 +221,7 @@ fn render_entities(gl: &gl::Gl, game: &Game) {
             model_mat,
             mesh: &game.render_data.meshes[mesh_index],
             color: color,
-            skeleton: game.state.entities.skeletons.get(&id),
+            bones: game.state.entities.bones.get(&id),
         });
     }
 
@@ -235,7 +234,7 @@ fn render_entities(gl: &gl::Gl, game: &Game) {
         model_mat,
         mesh: &game.render_data.plane,
         color: vector![150.0/255.0, 74.0/255.0, 39.0/255.0],
-        skeleton: None
+        bones: None
     });
 
 
@@ -248,7 +247,7 @@ fn render_entities(gl: &gl::Gl, game: &Game) {
         model_mat,
         mesh: &game.render_data.plane,
         color: vector![0.0, 0.0, 0.0],
-        skeleton: None
+        bones: None
     });
 
 
@@ -284,7 +283,7 @@ fn render_entities(gl: &gl::Gl, game: &Game) {
             model_mat,
             mesh: &game.render_data.plane,
             color: vector![7.0/255.0, 171.0/255.0, 40.0/255.0],
-            skeleton: None
+            bones: None
         });
         z_offset += 0.001;
     }
@@ -292,23 +291,10 @@ fn render_entities(gl: &gl::Gl, game: &Game) {
     for ro in render_objs {
         ro.shader.set_used();
 
-
         // Set joints/bones if we have them
-        if let Some(skeleton) = ro.skeleton {
-            let mut key_frame = animation_system::keyframe_from_t(&skeleton, 0, 0.0);
-
-            let mut bones = vec![];
-            for _ in 0..skeleton.joints.len() {
-                bones.push(na::Matrix4::<f32>::identity());
-            }
-
-            skeleton.set_bones_from_skeleton(&mut bones);
-
+        if let Some(bones) = ro.bones {
             let bones_loc = ro.shader.get_location("uBones");
             let len = bones.len() as i32;
-            // maybe calc and store this in entity
-
-
             unsafe {
                 gl.UniformMatrix4fv(bones_loc, len, gl::FALSE, bones.as_ptr() as *const f32);
             }

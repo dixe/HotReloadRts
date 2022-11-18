@@ -1,6 +1,5 @@
 use crate::types::*;
 use gl_lib::animations::*;
-use gl_lib::animations::types::*;
 
 
 #[allow(dead_code)]

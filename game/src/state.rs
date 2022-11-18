@@ -94,7 +94,12 @@ pub fn populate(state: &mut State, game_assets: &loading::GameAssets, render_dat
                 let translation = na::Vector3::new(1.0, 0.0, 0.0);
                 skeleton.update_joint_matrices(7, rotation, translation);
 
+
+                let bones = skeleton.create_bones();
+
                 state.entities.add_skeleton(id, skeleton);
+                state.entities.add_bones(id, bones);
+
                 // add animations too, but maybe we should just store animations on render_data, since duplicating them
                 // for all entities seems wastefull. We only need them once, to do interpolation for the given entitys
                 // skeleton. Which we then can render

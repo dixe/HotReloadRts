@@ -82,6 +82,9 @@ pub fn populate(state: &mut State, game_assets: &loading::GameAssets, render_dat
         None => None
     };
 
+
+    let walk_animation = &render_data.animations.get_mesh_name_animation(&boid_unit.model_name, "walk");
+
     for i in 1..5 {
         for j in 1..5 {
             let id = state.entities.add_entity(vector![i as f32 * 1.0, j as f32 * 1.0, 0.0], i % 3, boid_index);
@@ -90,19 +93,22 @@ pub fn populate(state: &mut State, game_assets: &loading::GameAssets, render_dat
 
                 let mut skeleton = ma.skeleton.clone();
 
-                let rotation = na::Unit::new_normalize(na::Quaternion::identity());
-                let translation = na::Vector3::new(1.0, 0.0, 0.0);
-                skeleton.update_joint_matrices(7, rotation, translation);
-
-
                 let bones = skeleton.create_bones();
 
                 state.entities.add_skeleton(id, skeleton);
                 state.entities.add_bones(id, bones);
 
-                // add animations too, but maybe we should just store animations on render_data, since duplicating them
-                // for all entities seems wastefull. We only need them once, to do interpolation for the given entitys
-                // skeleton. Which we then can render
+                // animations are stored in render data
+                // Store animation Ids. Try to get for baisc, fx move
+                // other animations are linked to a spell, so attack spell should also tell animation.
+                // By the time we get here that should be just an animationId
+
+                // For now just set everyting to loop the walk animation
+                if let Some(wa) = walk_animation {
+
+                    state.entities.set_active_animation(id, *wa);
+                }
+
             }
         }
     }

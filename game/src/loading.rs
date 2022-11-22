@@ -1,7 +1,7 @@
 use std::fs;
 use std::path::PathBuf;
 use std::io::{self, BufRead};
-use gl_lib::{gl, objects::gltf_mesh, animations::{self, skeleton}};
+use gl_lib::{gl, objects::gltf_mesh, animations::{self, skeleton, AnimationId}};
 use std::collections::HashMap;
 use crate::render;
 
@@ -11,6 +11,7 @@ pub type ModelsAssets = HashMap::<String, Model>;
 
 pub struct GameAssets {
     pub units: HashMap::<String, UnitAsset>,
+    pub animations: animations::Animations,
     pub models: ModelsAssets
 }
 
@@ -28,29 +29,30 @@ pub struct Model {
 #[derive(Debug, Clone)]
 pub struct ModelAnimations {
     pub skeleton: skeleton::Skeleton,
-    pub animations: HashMap::<String, animations::Animation>,
-
+    pub animations: Vec::<AnimationId>
 }
 
 
 pub fn load_all_assets(base_path: PathBuf) -> Result<GameAssets, String> {
 
     // load units from units folder, each file describes a unit, filename is unit name
-
     let mut units_path = base_path.clone();
     units_path.push("units");
 
-    let models = load_all_glb(base_path);
+    let mut animations : animations::Animations = Default::default();
+    let models = load_all_glb(base_path, &mut animations);
 
     let units = load_all_units(units_path)?;
+
     Ok(GameAssets {
         units: units,
+        animations,
         models: models
     })
 }
 
 
-fn load_all_glb(path: PathBuf) -> ModelsAssets {
+fn load_all_glb(path: PathBuf, animations: &mut animations::Animations) -> ModelsAssets {
 
     let mut res : ModelsAssets = Default::default();
 
@@ -62,14 +64,14 @@ fn load_all_glb(path: PathBuf) -> ModelsAssets {
             if file_path.ends_with(".glb") {
 
                 let skins = skeleton::load_skins(&file_path).unwrap();
-                let mesh_animations = animations::load_animations(&file_path, &skins);
 
+                animations::load_animations(&file_path, &skins, animations);
 
                 match gltf_mesh::meshes_from_gltf(&file_path, &skins) {
                     Ok(meshes_gltf) => {
 
                         for (name, mesh) in &meshes_gltf.meshes {
-                            let animations = match mesh_animations.get(name) {
+                            let animations = match animations.get_mesh_animations(name) {
                                 Some(anis) => {
                                     let skin_id = skins.mesh_to_skin.get(name).unwrap();
                                     let skeleton = skins.skeletons.get(&skin_id).unwrap().clone();
@@ -147,10 +149,12 @@ fn load_unit_file(path: PathBuf) -> UnitAsset {
 }
 
 
-pub fn populate_render_data(gl: &gl::Gl, rd: &mut render::RenderData, models: &ModelsAssets) {
+pub fn populate_render_data(gl: &gl::Gl, rd: &mut render::RenderData, assets: &GameAssets) {
+
+    rd.animations = assets.animations.clone();
 
     // Setup render data first
-    for (name, model) in models {
+    for (name, model) in &assets.models {
         let mesh = model.mesh.get_mesh(gl);
 
         // we also have animations on model

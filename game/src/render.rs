@@ -1,9 +1,8 @@
 extern crate shared;
 use nalgebra::vector;
-use gl_lib::{gl, na, objects::{plane, mesh, shadow_map, texture_quad,  square}, animations::skeleton, helpers, widget_gui::render, shader::{self, Shader}};
+use gl_lib::{gl, na, objects::{plane, mesh, shadow_map, texture_quad,  square}, animations::{self, skeleton}, helpers, widget_gui::render, shader::{self, Shader}};
 use crate::game::*;
 use std::collections::HashMap;
-use crate::*;
 
 pub type MeshIndex = usize;
 
@@ -14,6 +13,9 @@ pub struct RenderData {
     // MESHES LOADED FROM FILES
     meshes: Vec::<mesh::Mesh>,
     mesh_name_to_index: HashMap::<String, MeshIndex>,
+
+    // ANIMATION LOADED FROM FILES
+    pub animations: animations::Animations,
 
     // STATIC MESHES AND MODELS
     pub plane: mesh::Mesh,
@@ -41,6 +43,7 @@ impl RenderData {
         let mesh_name_to_index : HashMap::<String, usize> = Default::default();
         Self {
             meshes: vec![],
+            animations: animations::Animations::default(),
             mesh_name_to_index,
             plane,
             square: square::Square::new(gl),

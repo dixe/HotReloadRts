@@ -8,6 +8,7 @@ use crate::reload;
 use crate::loading;
 use crate::ui;
 use crate::deltatime;
+use crate::animation_system;
 
 
 //type ControllerType = camera::free_camera::Controller;
@@ -50,12 +51,18 @@ impl shared::SharedState for Game {
 
         self.state.dt = self.deltatime.time();
 
+        // update animations time step
+        animation_system::step_animation(&mut self.state);
+
         handle_inputs::handle_inputs(self, event_pump);
 
         self.camera_controller.update_camera(&mut self.camera, self.state.dt);
 
         // run logic step
         (self.logic.step_fn)(&mut self.state);
+
+        // update animations
+        animation_system::update_animations(&mut self.state, &self.render_data.animations);
 
 
         // update ui
@@ -149,7 +156,7 @@ pub extern "Rust" fn initialize_state(gl: &gl::Gl) -> Box<dyn shared::SharedStat
     let mut render_data = render::RenderData::new(gl, &base_path, widget_setup);
 
     let game_assets = loading::load_all_assets(base_path).unwrap();
-    loading::populate_render_data(gl, &mut render_data, &game_assets.models);
+    loading::populate_render_data(gl, &mut render_data, &game_assets);
     state::populate(&mut state, &game_assets, &render_data);
 
     let (info, ui_state) = ui::create_ui();

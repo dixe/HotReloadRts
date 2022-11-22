@@ -3,8 +3,8 @@ use nohash_hasher::IntMap;
 use crate::math::*;
 use crate::spells::SpellId;
 use crate::types::*;
-use gl_lib::animations::skeleton;
-
+use gl_lib::animations::{self, skeleton};
+use crate::animation_system::ActiveAnimation;
 
 pub type EntityId = usize;
 pub type EntityIndex = usize;
@@ -39,7 +39,7 @@ pub struct Entities {
     pub skeletons: IntMap<EntityId, skeleton::Skeleton>,
     pub bones : IntMap::<EntityId, skeleton::Bones>,
 
-    //pub current_animation: IntMap<EntityId, ActiveAnimation>,
+    pub current_animation: IntMap<EntityId, ActiveAnimation>,
 
     pub cooldown: CoolDownMap,
 
@@ -108,5 +108,9 @@ impl Entities {
 
     pub fn add_bones(&mut self, id: EntityId, bones: skeleton::Bones) {
         self.bones.insert(id, bones);
+    }
+
+    pub fn set_active_animation(&mut self, id: EntityId, animation_id: animations::AnimationId) {
+        self.current_animation.insert(id, ActiveAnimation { animation_id, current_time: 0.0});
     }
 }

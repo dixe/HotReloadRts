@@ -51,6 +51,16 @@ Only call behaviour tree when nothing is active in this table. That way we autom
 And the animation state will be driven by the behaviour/tables. And not a 'set' tree.
 
 
+Settings spell cast animations is easy, we should have them stored on the spell for entity. Maybe we need a map/list of animations, per skeleton, and map entites to them. We need to know which animation to play when idle, and walking. And for spells we need to store the spellId to animationId, per skeleton maybe. 
+Basically when an entity transition to idle. How to get the animationId? Either have a struct for each entity. Or have on for each skeleton id. And have a entity to skeleton and then use the skeletonId to lookup the animationId.  What about spells with both a channel and a cast. Basically multiple animations for different states?
+
+```
+struct SkeletonAnimations {
+   idle: AnimationId,   
+   walking: AnimationId,
+   spells: IntMap<SpellId, AnimationId>
+}
+```
 ## System
 
 

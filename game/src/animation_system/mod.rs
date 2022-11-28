@@ -1,6 +1,12 @@
 use crate::types::*;
 use gl_lib::animations::*;
 use crate::state;
+use crate::entity_system::StateChangeTo;
+
+
+mod animation_map;
+pub use self::animation_map::*;
+
 
 #[derive(Debug, Clone)]
 pub struct ActiveAnimation {
@@ -23,7 +29,40 @@ pub fn step_animation(state: &mut state::State) {
 
 /// Update entities bones, from the current animation
 pub fn update_animations(state: &mut state::State, animations: &Animations) {
+
+    // loop over state changes and update each entities
+
+    for (id, new_state) in &state.entities.state_change {
+        // TODO: Some logic so we don't keep restarting animations.
+        if let Some(map_id) = state.entities.animation_map.get(&id) {
+
+            let map = state.animation_maps.get(*map_id);
+
+
+
+            let animation_id = match new_state {
+                StateChangeTo::Idle => map.idle,
+                StateChangeTo::Move => map.walk,
+                StateChangeTo::Attack => map.attack,
+                _ => todo!(),
+            };
+
+
+            if let Some(cur_anim) = state.entities.current_animation.get(id) {
+                if cur_anim.animation_id == animation_id {
+                    continue;
+                }
+            }
+
+            let _ = &state.entities.current_animation.insert(*id, ActiveAnimation { animation_id, current_time: 0.0});
+        }
+    }
+
+    state.entities.state_change.clear();
+
     // given the current animation, update the entities bones
+
+
 
 
     for (e_id, anim) in &state.entities.current_animation {
@@ -35,51 +74,4 @@ pub fn update_animations(state: &mut state::State, animations: &Animations) {
             animation.update_bones(bones, skeleton, anim.current_time);
         }
     }
-}
-
-
-
-fn keyframe_from_t(skeleton: &skeleton::Skeleton, _next_keyframe: usize, _t: f32) -> KeyFrame {
-
-
-    let mut joints = Vec::new();
-
-
-    for i in 0..skeleton.joints.len() {
-        let translation = skeleton.joints[i].translation;
-        let rotation = skeleton.joints[i].rotation;
-        joints.push(Transformation {
-            translation,
-            rotation
-        });
-    }
-
-    KeyFrame {
-        joints
-    }
-    /*
-    for i in 0..skeleton.joints.len() {
-        let current_transformation = match next_keyframe {
-            0 => {
-                self.key_frames[0].joints[i]
-
-            },
-            n => {
-                self.key_frames[n - 1].joints[i]
-            }
-        };
-
-        let target_joint = &self.key_frames[next_keyframe].joints[i];
-
-        let rotation = current_transformation.rotation.slerp(&target_joint.rotation, t);
-
-        let translation = current_transformation.translation * (1.0 - t) + target_joint.translation * t;
-
-
-        joints.push(Transformation {
-            translation,
-            rotation
-        });
-    }
-*/
 }

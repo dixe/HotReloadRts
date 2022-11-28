@@ -29,8 +29,7 @@ pub fn run_ais(state: &mut game::State) {
             Decision::MoveTo(target_id) => {
                 if let Some(&idx) = state.entities.id_to_index.get(&target_id) {
                     let pos = state.entities.positions[idx];
-
-                    state.entities.move_targets.insert(*id, pos);
+                    state.entities.move_to(*id, pos);
                 }
             },
 
@@ -39,7 +38,7 @@ pub fn run_ais(state: &mut game::State) {
             },
 
             Decision::AttackTarget => {
-                state.entities.move_targets.remove(id);
+                state.entities.stop_move(*id);
 
                 let idx = *state.entities.id_to_index.get(&id).unwrap();
                 state.entities.velocities[idx] = V3::zeros();

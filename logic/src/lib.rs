@@ -53,7 +53,7 @@ fn update_selected_command(state: &mut game::State) {
                 Command::DefaultRightClick(target) => {
                     match state.action {
                         Action::Move => {
-                            update_move_target(&mut state.entities.move_targets, target, select_id);
+                            update_move_target(&mut state.entities, target, select_id);
                         },
                         Action::Spell => {
 
@@ -76,7 +76,7 @@ fn update_selected_command(state: &mut game::State) {
                 },
                 Command::Stop => {
                     // remove target
-                    let _ = state.entities.move_targets.remove(&select_id);
+                    state.entities.stop_move(select_id);
                     if let Some(&id) = state.entities.id_to_index.get(&select_id) {
                         state.entities.velocities[id] = V3::zeros();
                     }
@@ -90,10 +90,10 @@ fn update_selected_command(state: &mut game::State) {
 }
 
 
-fn update_move_target(move_targets: &mut MoveTargets, target: Target, index: EntityId) {
+fn update_move_target(entities: &mut Entities, target: Target, id: EntityId) {
     match target {
         Target::Position(x,y) => {
-            move_targets.insert(index, V3::new(x, y, 0.0));
+            entities.move_to(id, V3::new(x, y, 0.0));
         },
         _ => {
             todo!();
@@ -114,13 +114,13 @@ fn run_step(state: &mut game::State) {
     for i in 0..count {
         let id = state.entities.ids[i];
 
-        if let Some(target) = state.entities.move_targets.get(&id) {
+        if let Some(target) = state.entities.move_target(&id) {
 
             let move_res = move_to(state.entities.positions[i], *target, Rotation2 { radians: state.entities.z_rotations[i].radians });
 
             match move_res {
                 MoveUpdate::AtTarget => {
-                    state.entities.move_targets.remove(&i);
+                    state.entities.stop_move(i);
                     state.entities.velocities[i] = V3::zeros();
                 },
                 MoveUpdate::Rotate(rot) => {
@@ -133,7 +133,6 @@ fn run_step(state: &mut game::State) {
 
                 },
                 MoveUpdate::Move(move_to_target) => {
-
                     state.entities.velocities[i] = update_vel(move_to_target, dt);
                 }
             }

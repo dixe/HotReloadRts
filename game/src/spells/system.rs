@@ -55,7 +55,8 @@ pub fn cast_spell(caster_id: EntityId, spell_id: spells::SpellId, state: &mut st
             // Add Cooldown
 
             state.entities.cooldown.insert((caster_id, spell_id), s.cooldown);
-                return SpellCastResult::Cast;
+            state. entities.attack(caster_id);
+            return SpellCastResult::Cast;
         },
         _ => {
             return SpellCastResult::Failed;

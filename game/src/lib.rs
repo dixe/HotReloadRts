@@ -14,6 +14,7 @@ mod reload;
 
 
 pub mod entity_system;
+pub mod move_targets;
 
 pub mod math;
 

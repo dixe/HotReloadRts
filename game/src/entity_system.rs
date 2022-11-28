@@ -1,10 +1,12 @@
 use nalgebra as na;
 use nohash_hasher::IntMap;
+
 use crate::math::*;
 use crate::spells::SpellId;
 use crate::types::*;
 use gl_lib::animations::{self, skeleton};
-use crate::animation_system::ActiveAnimation;
+use crate::animation_system::*;
+
 
 pub type EntityId = usize;
 pub type EntityIndex = usize;
@@ -29,10 +31,11 @@ pub struct Entities {
     pub velocities: Vec::<V3>,
     pub z_rotations: Vec::<Rotation2>,
     pub team: Vec::<Team>,
+    pub(crate) state_change: IntMap<EntityId, StateChangeTo>,
 
     pub mesh_index: Vec::<usize>,
     pub targets: IntMap<EntityId, EntityId>,
-    pub move_targets: MoveTargets,
+    move_targets: MoveTargets,
 
     pub damage: DamageMap,
 
@@ -40,12 +43,19 @@ pub struct Entities {
     pub bones : IntMap::<EntityId, skeleton::Bones>,
 
     pub current_animation: IntMap<EntityId, ActiveAnimation>,
+    pub animation_map: IntMap<EntityId, AnimationMapId>,
 
-    pub cooldown: CoolDownMap,
-
-
+    pub cooldown: CoolDownMap
 }
 
+#[derive(Debug, Clone)]
+pub enum StateChangeTo {
+    None,
+    Idle,
+    Move,
+    Attack,
+    Spell(SpellId),
+}
 
 #[derive(Debug, Default, Clone)]
 pub struct EntityDamage {
@@ -68,6 +78,7 @@ impl Entities {
         self.z_rotations.push(Default::default());
         self.team.push(team);
         self.mesh_index.push(mesh_index);
+        self.state_change.insert(id, StateChangeTo::Idle);
 
         self.id_to_index.insert(id, self.positions.len() - 1);
 
@@ -97,6 +108,8 @@ impl Entities {
             self.mesh_index.swap_remove(index);
         };
 
+
+        self.state_change.remove(id);
         self.move_targets.remove(id);
         self.damage.remove(id);
         self.id_to_index.remove(id);
@@ -110,7 +123,37 @@ impl Entities {
         self.bones.insert(id, bones);
     }
 
+    pub fn add_animation_map(&mut self, id: EntityId, map_id: AnimationMapId) {
+        self.animation_map.insert(id, map_id);
+    }
+
     pub fn set_active_animation(&mut self, id: EntityId, animation_id: animations::AnimationId) {
         self.current_animation.insert(id, ActiveAnimation { animation_id, current_time: 0.0});
     }
+
+    pub fn move_to(&mut self, id: EntityId, pos: V3) {
+        self.move_targets.insert(id, pos);
+        self.animation_state_change(id, StateChangeTo::Move);
+    }
+
+
+    fn animation_state_change(&mut self, id: EntityId, new_state: StateChangeTo) {
+        self.state_change.insert(id, new_state);
+    }
+
+    pub fn stop_move(&mut self, id: EntityId) {
+        if let Some(__) = self.move_targets.remove(&id) {
+            // transition to idle animation
+            self.animation_state_change(id, StateChangeTo::Idle);
+        };
+    }
+
+    pub fn move_target(&self, id: &EntityId) -> Option<&V3> {
+        self.move_targets.get(id)
+    }
+
+    pub fn attack(&mut self, id: EntityId) {
+        self.animation_state_change(id, StateChangeTo::Attack);
+    }
+
 }

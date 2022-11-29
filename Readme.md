@@ -12,7 +12,7 @@ Goals:
 * [ ] animations
 * [ ] [sound](#sound)
 * [ ] [Health and damage](#health)
-* [ ] outline shader from here https://roystan.net/articles/outline-shader/
+* [ ] outline shader from here https://roystan.net/articles/outline-shader/ or https://learnopengl.com/Advanced-OpenGL/Stencil-testing
 
 
 # Hot reload

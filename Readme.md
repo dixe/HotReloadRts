@@ -12,7 +12,7 @@ Goals:
 * [ ] animations
 * [ ] [sound](#sound)
 * [ ] [Health and damage](#health)
-
+* [ ] outline shader from here https://roystan.net/articles/outline-shader/
 
 
 # Hot reload
